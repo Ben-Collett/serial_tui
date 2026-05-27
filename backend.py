@@ -4,7 +4,7 @@ from device import Device
 from connection import Connection, ConnectionManager
 from threading import Thread
 import time
-from events import SerialEvent, DataEvent, Connect,Disconnect
+from events import SerialEvent, DataEvent, Connect, Disconnect
 
 
 @dataclass
@@ -12,7 +12,8 @@ class SerialManager:
     devices_override: Optional[list[Device]] = None
     selected_device: Optional[Device] = None
     baudrate: int = 115200
-    _connection_manager: ConnectionManager = field(default_factory=ConnectionManager)
+    _connection_manager: ConnectionManager = field(
+        default_factory=ConnectionManager)
     _hooks: list = field(default_factory=list)
     _event_dispatcher: Optional[Thread] = None
 
@@ -25,7 +26,8 @@ class SerialManager:
         self.disconnect()
         connection = Connection(self.selected_device, self.baudrate)
         self._connection_manager.connect(connection)
-        self._event_dispatcher = Thread(target=self._dispatch_loop, daemon=True)
+        self._event_dispatcher = Thread(
+            target=self._dispatch_loop, daemon=True)
         self._event_dispatcher.start()
 
     def hook(self, func):
@@ -46,13 +48,14 @@ class SerialManager:
     def disconnect(self):
         self._connection_manager.disconnect()
 
-def my_print(event:SerialEvent):
+
+def my_print(event: SerialEvent):
     if isinstance(event, DataEvent):
-        print(event.msg,end="")
-    elif isinstance(event,Connect):
+        print(event.msg, end="")
+    elif isinstance(event, Connect):
         print("connected", event.device)
-    elif isinstance(event,Disconnect):
-        print("disconnected",event.device)
+    elif isinstance(event, Disconnect):
+        print("disconnected", event.device)
 
 
 if __name__ == "__main__":

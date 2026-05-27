@@ -1,0 +1,47 @@
+#newlineset {
+  align: right middle;
+}
+
+#topbar {
+  height: auto
+}
+
+
+#output {
+  height: 1fr;
+}
+
+#statusbar {
+  height: auto;
+  width: 1fr;
+}
+
+#data {
+  padding: 0 2;
+}
+
+#sectionswitch {
+  border: none;
+  padding: 0 0;
+  background: transparent;
+}
+
+#input {
+  width: 1fr;
+  /* take remaining space */
+}
+
+#send {
+  width: auto;
+  /* only as big as needed */
+  background: #1243AF;
+}
+
+#conbtn {
+  border: solid#41B53F;
+  margin: 0;
+  padding: 0;
+  width: 20%;
+  color: #41B53F;
+  background: $boost
+}

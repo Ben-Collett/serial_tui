@@ -38,10 +38,15 @@
 }
 
 #conbtn {
-  border: solid#41B53F;
+  border: solid #41B53F;
   margin: 0;
   padding: 0;
   width: 20%;
   color: #41B53F;
-  background: $boost
+  background: $boost;
+}
+
+#conbtn.disconnect {
+  border: solid #FF4136;
+  color: #FF4136;
 }

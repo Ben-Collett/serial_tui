@@ -2,7 +2,7 @@ import codecs
 from textual.app import App, ComposeResult
 from textual.containers import HorizontalGroup, Right, VerticalGroup
 from textual.widgets import Button, Footer, Header, Input, Label, Switch, TextArea
-from popups import SelectDeviceScreen
+from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent
 
@@ -17,7 +17,7 @@ def _unescape_escapes(text: str) -> str:
         return text
 
 
-class SerailTui(App):
+class SerialTui(App):
     CSS_PATH = "main_screen.scss"
     BINDINGS = []
 
@@ -55,16 +55,24 @@ class SerailTui(App):
         self.query_one("#data", Label).update(
             f"baud-rate:{manager.baudrate}\r\nport:{dev.port}\r\ndevice:{dev.name}"
         )
-        self.query_one("#conbtn", Button).label = "disconnect"
+        self._log_message(
+            f"connected – {dev.name} @ {dev.port}:{manager.baudrate}")
+        btn = self.query_one("#conbtn", Button)
+        btn.label = "disconnect"
+        btn.add_class("disconnect")
+
+    def _log_message(self, msg: str) -> None:
+        self._append_data(f"SerialTui: {msg}\n")
 
     def _on_disconnected(self) -> None:
         self._connected = False
-        self.query_one("#data", Label).update("disconnected")
-        self.query_one("#conbtn", Button).label = "connect"
+        self._log_message("disconnection device")
+        btn = self.query_one("#conbtn", Button)
+        btn.label = "connect"
+        btn.remove_class("disconnect")
 
     def _on_error(self, err: str) -> None:
-        ta = self.query_one("#output", TextArea)
-        ta.insert(f"\n[error] {err}\n", location=ta.document.end)
+        self._log_message(f"error: {err}")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "selectbtn":
@@ -77,12 +85,24 @@ class SerailTui(App):
     def on_input_submitted(self, _: Input.Submitted) -> None:
         self._send_data()
 
-    def _device_selected(self, device) -> None:
-        if device is None:
+    def _device_selected(self, data: SelectDeviceData | None) -> None:
+        if data is None:
             return
-        manager.selected_device = device
+        manager.selected_device = data.device
+        manager.baudrate = data.baud_rate
+        if data.settings_accepted and data.recommend_settings is not None:
+            rs = data.recommend_settings
+            for section in self.query_one("#newlineset", NewLineSet).query(ToggleSection):
+                if r"\n" in section.label and rs.auto_new_line is not None:
+                    section.query_one(Switch).value = rs.auto_new_line
+                elif r"\r" in section.label and rs.auto_return_carry is not None:
+                    section.query_one(Switch).value = rs.auto_return_carry
+        self._update_device_display()
+
+    def _update_device_display(self):
+        dev = manager.selected_device
         self.query_one("#data", Label).update(
-            f"baud-rate:{manager.baudrate}\r\nport:{device.port}\r\ndevice:{device.name}"
+            f"baud-rate:{manager.baudrate}\r\nport:{dev.port}\r\ndevice:{dev.name}"
         )
 
     def _toggle_newline(self, check: str) -> None:
@@ -115,9 +135,9 @@ class SerailTui(App):
         elif cmd in ("clear", "l"):
             self.query_one("#output", TextArea).text = ""
         else:
-            self._append_data(
-                f"Unknown command '{
-                    text}' — use !! to send literal '!', or use a valid command.\n"
+            self._log_message(
+                f"unknown command '{
+                    text}' — use !! to send literal '!', or use a valid command."
             )
 
     def _send_data(self) -> None:
@@ -131,6 +151,11 @@ class SerailTui(App):
         elif text.startswith("!"):
             inp.value = ""
             self._handle_command(text)
+            return
+
+        if not self._connected:
+            self._log_message("no device connected")
+            inp.value = ""
             return
 
         text = _unescape_escapes(text)
@@ -152,7 +177,7 @@ class SerailTui(App):
         try:
             manager.write(data.encode())
         except Exception as e:
-            self._append_data(f"Send failed: {e}\n")
+            self._log_message(f"send failed: {e}")
             return
         if echo:
             self._append_data(data)
@@ -161,13 +186,13 @@ class SerailTui(App):
     def _toggle_connect(self) -> None:
         if not self._connected:
             if manager.selected_device is None:
-                self._append_data(
-                    "No device selected – use 'select device' first.\n")
+                self._log_message(
+                    "no device selected – use 'select device' first.")
                 return
             try:
                 manager.connect()
             except Exception as e:
-                self._append_data(f"Connection failed: {e}\n")
+                self._log_message(f"connection failed: {e}")
         else:
             manager.disconnect()
 
@@ -181,7 +206,7 @@ class SerailTui(App):
 class StatusBar(HorizontalGroup):
     def compose(self) -> ComposeResult:
         yield Button("select device", id="selectbtn")
-        yield Label("baud-rate:115200\r\nport:/dev/TCAM0\r\ndevice:unknown", id="data")
+        yield Label("baud-rate:N/A\r\nport:N/A\r\ndevice:N/A", id="data")
         yield Right(NewLineSet(id="newlineset"))
         yield Button("connect", id="conbtn")
 
@@ -210,5 +235,5 @@ class TopBar(HorizontalGroup):
 
 
 if __name__ == "__main__":
-    app = SerailTui()
+    app = SerialTui()
     app.run()

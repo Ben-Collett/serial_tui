@@ -11,7 +11,7 @@ from events import SerialEvent, DataEvent, Connect, Disconnect
 class SerialManager:
     devices_override: Optional[list[Device]] = None
     selected_device: Optional[Device] = None
-    baudrate: int = 115200
+    baudrate: int = 9600
     _connection_manager: ConnectionManager = field(
         default_factory=ConnectionManager)
     _hooks: list = field(default_factory=list)

@@ -233,9 +233,9 @@ class RecommendedSettingsScreen(ModalScreen):
             Label("Recommended device settings:"),
             Label("\n".join(lines)),
             HorizontalGroup(
-                Button("Back", id="back"),
-                Button("Decline", id="decline"),
-                Button("Accept", id="accept", variant="primary"),
+                Button("[u]A[/u]ccept", id="accept", variant="primary"),
+                Button("[u]D[/u]ecline", id="decline"),
+                Button("[u]B[/u]ack", id="back"),
             ),
             id="popup",
         )
@@ -259,6 +259,12 @@ class RecommendedSettingsScreen(ModalScreen):
 
     def key_D(self) -> None:
         self.dismiss(False)
+
+    def key_b(self) -> None:
+        self.dismiss(None)
+
+    def key_B(self) -> None:
+        self.dismiss(None)
 
     def key_escape(self) -> None:
         self.dismiss(None)

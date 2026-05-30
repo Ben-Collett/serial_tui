@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 from device import Device
+from queue import Empty
 from connection import Connection, ConnectionManager
 from threading import Thread
 import time
@@ -12,6 +13,7 @@ class SerialManager:
     devices_override: Optional[list[Device]] = None
     selected_device: Optional[Device] = None
     baudrate: int = 9600
+    throttle_ms: int = 0
     _connection_manager: ConnectionManager = field(
         default_factory=ConnectionManager)
     _hooks: list = field(default_factory=list)
@@ -41,9 +43,24 @@ class SerialManager:
             event = self._connection_manager.read_event()
             for hook in self._hooks:
                 hook(event)
+        while True:
+            try:
+                event = self._connection_manager._event_queue.get_nowait()
+            except Empty:
+                break
+            for hook in self._hooks:
+                hook(event)
 
     def write(self, to_write: bytes):
+        self._connection_manager.throttle_ms = self.throttle_ms
         self._connection_manager.write(to_write)
+
+    def flush(self):
+        self._connection_manager.flush()
+
+    @property
+    def buffer_size(self) -> int:
+        return self._connection_manager.buffer_size
 
     def disconnect(self):
         self._connection_manager.disconnect()

@@ -4,7 +4,7 @@ from textual.containers import HorizontalGroup, Right, VerticalGroup
 from textual.widgets import Button, Footer, Header, Input, Label, Switch, TextArea
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
-from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent
+from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
 
 
 def _unescape_escapes(text: str) -> str:
@@ -44,6 +44,8 @@ class SerialTui(App):
             self.call_from_thread(self._on_disconnected)
         elif isinstance(event, ErrorEvent):
             self.call_from_thread(self._on_error, event.err)
+        elif isinstance(event, BufferUpdate):
+            self.call_from_thread(self._update_buffer_display)
 
     def _append_data(self, msg: str) -> None:
         ta = self.query_one("#output", TextArea)
@@ -70,9 +72,20 @@ class SerialTui(App):
         btn = self.query_one("#conbtn", Button)
         btn.label = "connect"
         btn.remove_class("disconnect")
+        self.query_one("#bufcount", Label).update("")
 
     def _on_error(self, err: str) -> None:
         self._log_message(f"error: {err}")
+
+    def _update_buffer_display(self) -> None:
+        buf_count = manager.buffer_size
+        self.query_one("#bufcount", Label).update(
+            f"buf:{buf_count}"
+        )
+        ms = manager.throttle_ms
+        self.query_one("#throttledisplay", Label).update(
+            f"th:{ms}ms" if ms > 0 else "th:off"
+        )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "selectbtn":
@@ -97,6 +110,8 @@ class SerialTui(App):
                     section.query_one(Switch).value = rs.auto_new_line
                 elif r"\r" in section.label and rs.auto_return_carry is not None:
                     section.query_one(Switch).value = rs.auto_return_carry
+            if rs.throttle_ms is not None:
+                manager.throttle_ms = rs.throttle_ms
         self._update_device_display()
 
     def _update_device_display(self):
@@ -134,6 +149,27 @@ class SerialTui(App):
             self.push_screen(SelectDeviceScreen(), self._device_selected)
         elif cmd in ("clear", "l"):
             self.query_one("#output", TextArea).text = ""
+        elif cmd.startswith("throttle") or cmd == "th" or cmd.startswith("th "):
+            parts = cmd.split()
+            if len(parts) == 2:
+                try:
+                    ms = int(parts[1])
+                    if ms < 0:
+                        self._log_message("throttle must be >= 0")
+                    else:
+                        manager.throttle_ms = ms
+                        self._log_message(f"throttle set to {ms}ms")
+                except ValueError:
+                    self._log_message("usage: !throttle <ms>")
+            else:
+                self._log_message(f"throttle: {manager.throttle_ms}ms")
+        elif cmd == "flush":
+            count = manager.buffer_size
+            if count > 0:
+                manager.flush()
+                self._log_message(f"flushed {count} buffered command(s)")
+            else:
+                self._log_message("buffer empty")
         else:
             self._log_message(
                 f"unknown command '{
@@ -207,7 +243,13 @@ class StatusBar(HorizontalGroup):
     def compose(self) -> ComposeResult:
         yield Button("select device", id="selectbtn")
         yield Label("baud-rate:N/A\r\nport:N/A\r\ndevice:N/A", id="data")
-        yield Right(NewLineSet(id="newlineset"))
+        yield VerticalGroup(
+            Label("th:off", id="throttledisplay"),
+            Label("buf:0", id="bufcount"),
+            id="throttle-buf-group",
+        )
+
+        yield NewLineSet(id="newlineset")
         yield Button("connect", id="conbtn")
 
 
@@ -223,9 +265,9 @@ class ToggleSection(HorizontalGroup):
 
 class NewLineSet(VerticalGroup):
     def compose(self) -> ComposeResult:
-        yield ToggleSection(r"\r   ")
-        yield ToggleSection(r"\n   ")
-        yield ToggleSection(r"echo ")
+        yield ToggleSection(r" \r   ")
+        yield ToggleSection(r" \n   ")
+        yield ToggleSection(r" echo ")
 
 
 class TopBar(HorizontalGroup):

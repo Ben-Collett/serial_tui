@@ -53,7 +53,7 @@ class SelectDeviceScreen(ModalScreen):
 
     def _check_recommended_settings(self):
         settings = self._selected_device.recommended_settings()
-        if settings.auto_new_line is not None or settings.auto_return_carry is not None:
+        if settings.auto_new_line is not None or settings.auto_return_carry is not None or settings.throttle_ms is not None:
             self._recommend_settings = settings
             self.app.push_screen(RecommendedSettingsScreen(
                 settings), self._on_settings_done)
@@ -226,6 +226,8 @@ class RecommendedSettingsScreen(ModalScreen):
         if self.settings.auto_return_carry is not None:
             val = "On" if self.settings.auto_return_carry else "Off"
             lines.append(f"Auto return carry (\\r): {val}")
+        if self.settings.throttle_ms is not None:
+            lines.append(f"Command throttle: {self.settings.throttle_ms}ms")
 
         yield Container(
             Label("Recommended device settings:"),

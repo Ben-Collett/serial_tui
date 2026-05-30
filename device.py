@@ -11,6 +11,7 @@ class RecommendedDeviceSettings:
     baud_rate: int | None = None
     auto_new_line: bool | None = None
     auto_return_carry: bool | None = None
+    throttle_ms: int | None = None
 
 
 @dataclass
@@ -29,5 +30,5 @@ class Device:
 
     def recommended_settings(self) -> RecommendedDeviceSettings:
         if "charachorder" in self.description.lower():
-            return RecommendedDeviceSettings(baud_rate=115200, auto_new_line=True, auto_return_carry=True)
+            return RecommendedDeviceSettings(baud_rate=115200, auto_new_line=True, auto_return_carry=True, throttle_ms=100)
         return RecommendedDeviceSettings()

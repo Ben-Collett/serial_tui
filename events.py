@@ -23,3 +23,7 @@ class ErrorEvent(SerialEvent):
 class DataEvent(SerialEvent):
     msg: str
 
+
+class BufferUpdate(SerialEvent):
+    pass
+

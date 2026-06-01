@@ -2,6 +2,7 @@ import codecs
 from textual.app import App, ComposeResult
 from textual.containers import HorizontalGroup, Right, VerticalGroup
 from textual.widgets import Button, Footer, Header, Input, Label, Switch, TextArea
+from completed_input import CompletedInput
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
@@ -15,6 +16,26 @@ def _unescape_escapes(text: str) -> str:
         return codecs.decode(text.encode("latin-1"), "unicode_escape")
     except (ValueError, SyntaxError):
         return text
+
+
+command_suggestions = [
+    ("!r", "toggle \\r newline"),
+    ("!n", "toggle \\n newline"),
+    ("!rn", "toggle both \\r and \\n"),
+    ("!echo", "toggle local echo"),
+    ("!connect", "connect to device"),
+    ("!con", "connect to device"),
+    "!c",
+    ("!disconnect", "disconnect from device"),
+    ("!dis", "disconnect from device"),
+    ("!select", "open device selection"),
+    ("!s", "open device selection"),
+    ("!clear", "clear output terminal"),
+    ("!l", "clear output terminal"),
+    ("!throttle", "set or view throttle ms"),
+    ("!th", "set or view throttle ms"),
+    ("!flush", "flush buffered commands"),
+]
 
 
 class SerialTui(App):
@@ -272,7 +293,7 @@ class NewLineSet(VerticalGroup):
 
 class TopBar(HorizontalGroup):
     def compose(self) -> ComposeResult:
-        yield Input(id="input")
+        yield CompletedInput(id="input", suggestions=command_suggestions)
         yield Button("send", id="send")
 
 

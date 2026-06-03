@@ -1,0 +1,5 @@
+PROGRAM_NAME = "SerialTui"
+CONFIG_FILE_NAME = "config.toml"
+DEVICES_DIR_NAME = "devices"
+DEVICES_EXTENSION = "jsonl"
+DEFAULT_THEME = "textual-dark"

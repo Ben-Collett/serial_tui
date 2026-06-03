@@ -1,0 +1,29 @@
+{"n":"CMD","d":"Lists available commands."}
+{"n":"ID","d":"Identifies device, such as CHARACHORDER ONE M0."}
+{"n":"VERSION","d":"Returns the current firmware version, such as 1.1.1."}
+{"n":"CML","d":"Used for getting, setting (adding or overwriting), and deleting chordmaps."}
+{"n":"CML C0","d":"Gets the (decimal) number of chordmaps."}
+{"n":"CML C1","d":"Gets a chordmap by the index number (hexadecimal uint16) if within range."}
+{"n":"CML C2","d":"Gets a chordmap by the chord (hexadecimal) value if it is found in the library."}
+{"n":"CML C3","d":"Sets a chordmap with a chord and output bytes (hexadecimal)."}
+{"n":"CML C4","d":"Deletes a chordmap from the library if the chord exists."}
+{"n":"VAR","d":"Used for getting and settings parameters; this includes setting custom chordmaps."}
+{"n":"VAR B0","d":"Commits any parameter changes to persistent memory."}
+{"n":"VAR B1","d":"Gets the value of a parameter."}
+{"n":"VAR B2","d":"Sets the value of a parameter."}
+{"n":"VAR B3","d":"Gets the value of a key in a keymap."}
+{"n":"VAR B4","d":"Sets the value of a key in a keymap."}
+{"n":"RST","d":"Restarts/reboots the microcontroller hardware. It has additional arguments for Factory and Bootloader."}
+{"n":"RST RESTART","d":"Restarts the microcontroller."}
+{"n":"RST FACTORY","d":"Performs a factory reset of the flash and emulated eeprom. During the process, the flash chip is erased."}
+{"n":"RST BOOTLOADER","d":"Restarts the device into a bootloader mode."}
+{"n":"RST PARAMS","d":"Resets the parameters to factory defaults and commits."}
+{"n":"RST KEYMAPS","d":"Resets the keymaps to the factory defaults and commits."}
+{"n":"RST STARTER","d":"Adds starter chordmaps. This does not clear the chordmap library, but adds to it, replacing those that have the same chord."}
+{"n":"RST CLEARCML","d":"Permanently deletes all the chordmaps stored in the device memory."}
+{"n":"RST UPGRADECML","d":"Attempts to upgrade chordmaps that the system detects are older. This is under development."}
+{"n":"RST FUNC","d":"Adds back in functional chords such as CAPSLOCKS and Backspace-X chords."}
+{"n":"RAM","d":"Prints the current amount of SRAM available; this is primarily used for debugging."}
+{"n":"SIM","d":"Simulates/injects a chord and outputs the chord output if the chord exists in the chord library; this is primarily used for debugging."}
+{"n":"SIM CHORD","d":"Injects a chord to be processed by the device."}
+{"n":"SIM KEYSTATE","d":"Injects key states to be processed by the device."}

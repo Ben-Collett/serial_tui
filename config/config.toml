@@ -1,0 +1,18 @@
+[appearance]
+theme = "textual-dark"
+# theme = "tokyo-night"
+
+[autocomplete]
+enabled = true
+command_auto_complete = true
+
+[keybindings]
+"ctrl+l" = "!clear"
+"ctrl+s" = "!select"
+"ctrl+r" = "!r"
+"ctrl+n" = "!n"
+"ctrl+g" = "!reload"
+
+[devices.charachroder]
+description = "(?i)charachorder"
+baud_rate = 11520

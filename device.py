@@ -12,6 +12,7 @@ class RecommendedDeviceSettings:
     auto_new_line: bool | None = None
     auto_return_carry: bool | None = None
     throttle_ms: int | None = None
+    auto_complete_suggestions: dict | None = None
 
 
 @dataclass

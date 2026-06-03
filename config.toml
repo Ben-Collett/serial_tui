@@ -1,0 +1,124 @@
+[autocomplete]
+enabled = true
+command_auto_complete = true
+
+[devices.charachroder]
+path = "*"
+description = "(?i)charachorder"
+baud_rate = 11520
+
+[[devices.charachorder.commands]]
+name = "CMD"
+description = "Lists available commands."
+
+[[devices.charachorder.commands]]
+name = "ID"
+description = "Identifies device, such as CHARACHORDER ONE M0."
+
+[[devices.charachorder.commands]]
+name = "VERSION"
+description = "Returns the current firmware version, such as 1.1.1."
+
+[[devices.charachorder.commands]]
+name = "CML"
+description = "Used for getting, setting (adding or overwriting), and deleting chordmaps."
+
+[[devices.charachorder.commands]]
+name = "CML C0"
+description = "Gets the (decimal) number of chordmaps."
+
+[[devices.charachorder.commands]]
+name = "CML C1"
+description = "Gets a chordmap by the index number (hexadecimal uint16) if within range."
+
+[[devices.charachorder.commands]]
+name = "CML C2"
+description = "Gets a chordmap by the chord (hexadecimal) value if it is found in the library."
+
+[[devices.charachorder.commands]]
+name = "CML C3"
+description = "Sets a chordmap with a chord and output bytes (hexadecimal)."
+
+[[devices.charachorder.commands]]
+name = "CML C4"
+description = "Deletes a chordmap from the library if the chord exists."
+
+[[devices.charachorder.commands]]
+name = "VAR"
+description = "Used for getting and settings parameters; this includes setting custom chordmaps."
+
+[[devices.charachorder.commands]]
+name = "VAR B0"
+description = "Commits any parameter changes to persistent memory."
+
+[[devices.charachorder.commands]]
+name = "VAR B1"
+description = "Gets the value of a parameter."
+
+[[devices.charachorder.commands]]
+name = "VAR B2"
+description = "Sets the value of a parameter."
+
+[[devices.charachorder.commands]]
+name = "VAR B3"
+description = "Gets the value of a key in a keymap."
+
+[[devices.charachorder.commands]]
+name = "VAR B4"
+description = "Sets the value of a key in a keymap."
+
+[[devices.charachorder.commands]]
+name = "RST"
+description = "Restarts/reboots the microcontroller hardware. It has additional arguments for Factory and Bootloader."
+
+[[devices.charachorder.commands]]
+name = "RST RESTART"
+description = "Restarts the microcontroller."
+
+[[devices.charachorder.commands]]
+name = "RST FACTORY"
+description = "Performs a factory reset of the flash and emulated eeprom. During the process, the flash chip is erased."
+
+[[devices.charachorder.commands]]
+name = "RST BOOTLOADER"
+description = "Restarts the device into a bootloader mode."
+
+[[devices.charachorder.commands]]
+name = "RST PARAMS"
+description = "Resets the parameters to factory defaults and commits."
+
+[[devices.charachorder.commands]]
+name = "RST KEYMAPS"
+description = "Resets the keymaps to the factory defaults and commits."
+
+[[devices.charachorder.commands]]
+name = "RST STARTER"
+description = "Adds starter chordmaps. This does not clear the chordmap library, but adds to it, replacing those that have the same chord."
+
+[[devices.charachorder.commands]]
+name = "RST CLEARCML"
+description = "Permanently deletes all the chordmaps stored in the device memory."
+
+[[devices.charachorder.commands]]
+name = "RST UPGRADECML"
+description = "Attempts to upgrade chordmaps that the system detects are older. This is under development."
+
+[[devices.charachorder.commands]]
+name = "RST FUNC"
+description = "Adds back in functional chords such as CAPSLOCKS and Backspace-X chords."
+
+[[devices.charachorder.commands]]
+name = "RAM"
+description = "Prints the current amount of SRAM available; this is primarily used for debugging."
+
+[[devices.charachorder.commands]]
+name = "SIM"
+description = "Simulates/injects a chord and outputs the chord output if the chord exists in the chord library; this is primarily used for debugging."
+
+[[devices.charachorder.commands]]
+name = "SIM CHORD"
+description = "Injects a chord to be processed by the device."
+
+[[devices.charachorder.commands]]
+name = "SIM KEYSTATE"
+description = "Injects key states to be processed by the device."

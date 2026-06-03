@@ -6,6 +6,9 @@ from completed_input import CompletedInput
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
+from config import get_theme
+from config_utils import load_config
+from constants import DEFAULT_THEME
 
 
 def _unescape_escapes(text: str) -> str:
@@ -46,6 +49,9 @@ class SerialTui(App):
         super().__init__()
         self._connected = False
 
+    def notify_error(self, message: str) -> None:
+        self.notify(message, severity="error", timeout=5)
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield TopBar(id="topbar")
@@ -54,7 +60,19 @@ class SerialTui(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.reload_config()
         manager.hook(self._handle_event)
+
+    def reload_config(self):
+        config = load_config()
+        theme = get_theme(config)
+        if theme not in self.available_themes:
+            self.notify_error(
+                f"Theme '{theme}' is not a registered theme. Using '{
+                    DEFAULT_THEME}'."
+            )
+            theme = DEFAULT_THEME
+        self.theme = theme
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):

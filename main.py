@@ -3,11 +3,12 @@ from textual.app import App, ComposeResult
 from textual.containers import HorizontalGroup, Right, VerticalGroup
 from textual.widgets import Button, Footer, Header, Input, Label, Switch, TextArea
 from completed_input import CompletedInput
+from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
 from config import get_theme
-from config_utils import load_config
+from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
 
 
@@ -63,14 +64,18 @@ class SerialTui(App):
         self.reload_config()
         manager.hook(self._handle_event)
 
+    def update_themes(self):
+        for file in get_themes_dir().glob("*.toml"):
+            theme = theme_from_file(file)
+            if theme is not None:
+                self.register_theme(theme)
+
     def reload_config(self):
+        self.update_themes()
         config = load_config()
         theme = get_theme(config)
         if theme not in self.available_themes:
-            self.notify_error(
-                f"Theme '{theme}' is not a registered theme. Using '{
-                    DEFAULT_THEME}'."
-            )
+            self.notify_error(not_reigistered_theme(theme, DEFAULT_THEME))
             theme = DEFAULT_THEME
         self.theme = theme
 
@@ -210,10 +215,7 @@ class SerialTui(App):
             else:
                 self._log_message("buffer empty")
         else:
-            self._log_message(
-                f"unknown command '{
-                    text}' — use !! to send literal '!', or use a valid command."
-            )
+            self._log_message(unknown_command(text))
 
     def _send_data(self) -> None:
         inp = self.query_one("#input", Input)

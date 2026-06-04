@@ -1,8 +1,10 @@
+from textual.theme import Theme
 from config_manager import ConfigManager
 from load_config_map import parse
 from pathlib import Path
 import json
-from constants import PROGRAM_NAME, CONFIG_FILE_NAME, DEVICES_DIR_NAME, DEVICES_EXTENSION
+from constants import PROGRAM_NAME, CONFIG_FILE_NAME, DEVICES_DIR_NAME, DEVICES_EXTENSION, THEME_DIR_NAME
+from theme_parse import create_theme
 
 _NAME_KEY = "n"
 _DESCRIPTION_KEY = "d"
@@ -31,6 +33,22 @@ def read_config(file_path: Path) -> dict:
     except FileNotFoundError:
         pass
     return out or {}
+
+
+def get_themes_dir() -> Path:
+    return get_config_dir()/THEME_DIR_NAME
+
+
+def theme_from_file(file: Path) -> Theme | None:
+    out = None
+    try:
+        data = parse(file)
+        if data is None:
+            return None
+        out = create_theme(file.stem, data)
+    except FileNotFoundError:
+        pass
+    return out
 
 
 def _parse_json(txt: str) -> dict:

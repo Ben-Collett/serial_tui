@@ -1,5 +1,6 @@
 [appearance]
 theme = "textual-dark"
+# theme = "full_documented_theme"
 # theme = "tokyo-night"
 
 [autocomplete]

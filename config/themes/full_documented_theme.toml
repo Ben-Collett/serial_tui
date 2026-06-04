@@ -1,0 +1,290 @@
+# note this is a theme that uses every possible textual feature
+# that I was able to figure out using an LLM
+# most of these are not relevant to the serial tui, for example anything to do with markdown probably is not relevant
+# and I currently haven't tested every option yet
+# so I would recommend sticking with minimual_example.toml which is all tested
+# having said that you can find the official textual theme documentation which this file is based on here https://textual.textualize.io/guide/design/
+# note the file name is used as the theme name
+
+# =============================================================================
+# TEXTUAL THEME EXAMPLE
+# =============================================================================
+# This file documents EVERY possible field that can be set on a Textual Theme.
+# Use it as a reference for creating your own themes.
+#
+# Colors can be:
+#   - Hex:  "#0178D4" or "#abc"
+#   - RGB:  "rgb(1, 120, 212)"
+#   - HSL:  "hsl(210, 99%, 42%)"
+#   - ANSI: "ansi_blue", "ansi_bright_red", "ansi_default", etc.
+#   - Named: "red", "blue", etc.
+# Some fields also accept an alpha suffix like "#0178D4 30%" or "auto 87%".
+# =============================================================================
+
+# =============================================================================
+# [metadata]  —  Theme-level settings that control how colors are interpreted
+# =============================================================================
+[metadata]
+# Whether this is a dark theme (true) or light theme (false).
+# Controls default background/surface colors when not explicitly set,
+# and how shade variants are computed.
+dark = true
+
+# How much shade variants (darken-1..3, lighten-1..3) differ from the base.
+# Range: 0.0 (no variation) to ~0.5 (extreme). Default: 0.15
+luminosity_spread = 0.15
+
+# The default alpha for text colors. 1.0 = fully opaque. Default: 0.95
+text_alpha = 0.95
+
+# =============================================================================
+# [color]  —  The 10 named color slots that define the theme palette
+# =============================================================================
+[color]
+# REQUIRED. The main branding/highlight color.
+# Used for borders on focused widgets, block cursors, links, markdown headers, etc.
+primary = "#0178D4"
+
+# An alternative branding color. Falls back to `$primary` if not set.
+secondary = "#004578"
+
+# Color for warning messages / indicators. Falls back to `$primary`.
+warning = "#ffa62b"
+
+# Color for error messages / indicators. Falls back to `$secondary`.
+error = "#ba3c5b"
+
+# Color for success messages / indicators. Falls back to `$secondary`.
+success = "#4EBF71"
+
+# Accent color for drawing attention (e.g. footer keybinding hints). Falls back to `$primary`.
+accent = "#ffa62b"
+
+# Default text color. Falls back to the inverse of `$background`.
+foreground = "#e0e0e0"
+
+# The screen-level background color.
+# Dark default: "#121212", Light default: "#efefef"
+background = "#1a1a2e"
+
+# Default widget/card surface color (e.g. scrollable content areas).
+# Dark default: "#1e1e1e", Light default: "#f5f5f5"
+surface = "#16213e"
+
+# Panel / sidebar / footer background color.
+# When unset it is computed by blending `$surface` with `$primary`.
+panel = "#0f3460"
+
+# WARNING: this setting doesn't seem to be working right now and it will crash the program
+# A semi-transparent overlay color used for hover effects and layering.
+# When unset, computed from the contrast text with 4% alpha.
+# boost = "#ffffff 8%"
+
+# =============================================================================
+# [variables]  —  Fine-grained overrides for every derived design token.
+# Each key listed below can be set in this section to override the default
+# computation shown in the comment.
+#
+# Without these overrides, the color system auto-computes sensible defaults
+# from the [color] section above.
+# =============================================================================
+[variables]
+# ── Text ─────────────────────────────────────────────────────────────────────
+
+# Default text color. Default: "auto 87%"
+# "auto" = automatically pick black or white for contrast against background.
+text = "auto 87%"
+
+# Muted / less important text. Default: "auto 60%"
+text-muted = "#a0a0a0"
+
+# Disabled / greyed-out text. Default: "auto 38%"
+text-disabled = "#606060"
+
+# ── Foreground muted/disabled (explicit foreground overrides) ────────────────
+
+# Muted variant of the foreground color. Default: $foreground at 60% alpha
+foreground-muted = "#c0c0c0"
+
+# Disabled variant of the foreground color. Default: $foreground at 38% alpha
+foreground-disabled = "#808080"
+
+# ── Muted base-color variants ────────────────────────────────────────────────
+
+# Each muted variant is the base color blended with the background (70/30 split).
+primary-muted = "#0178D4 70%"
+secondary-muted = "#004578 70%"
+accent-muted = "#ffa62b 70%"
+warning-muted = "#ffa62b 70%"
+error-muted = "#ba3c5b 70%"
+success-muted = "#4EBF71 70%"
+
+# ── Block cursor (OptionList, DataTable, Tree, etc.) ─────────────────────────
+
+# Text color inside a block cursor cell. Default: $text
+block-cursor-foreground = "#ffffff"
+
+# Background color of the block cursor cell. Default: $primary
+block-cursor-background = "#0178D4"
+
+# Text style inside the block cursor. CSS-like keywords: bold, italic, reverse, underline, none.
+# Default: "bold"
+block-cursor-text-style = "bold"
+
+# Text color of an unfocused block cursor. Default: $foreground
+block-cursor-blurred-foreground = "#e0e0e0"
+
+# Background of an unfocused block cursor. Default: $primary at 30% alpha
+block-cursor-blurred-background = "#0178D4 30%"
+
+# Text style of an unfocused block cursor. Default: "none"
+block-cursor-blurred-text-style = "none"
+
+# Hover highlight for block-style widgets. Default: $boost at 10% alpha
+block-hover-background = "#ffffff 10%"
+
+# ── Borders ──────────────────────────────────────────────────────────────────
+
+# Border color for focused widgets. Default: $primary
+border = "#0178D4"
+
+# Border color for blurred (unfocused) widgets. Default: $surface darkened 2.5%
+border-blurred = "#0d1b3a"
+
+# ── Surface active ───────────────────────────────────────────────────────────
+
+# Background for focused built-in widgets. Default: $surface lightened by luminosity_spread/2.5
+surface-active = "#1e2f5a"
+
+# ── Scrollbar ────────────────────────────────────────────────────────────────
+
+# Scrollbar handle color. Default: $background-darken-1 + $primary at 40% alpha
+scrollbar = "#0178D4 40%"
+
+# Scrollbar handle on hover. Default: $background-darken-1 + $primary at 50% alpha
+scrollbar-hover = "#0178D4 50%"
+
+# Scrollbar handle while actively dragging. Default: $primary
+scrollbar-active = "#0178D4"
+
+# Scrollbar track background. Default: $background-darken-1
+scrollbar-background = "#111122"
+
+# Scrollbar corner (where horizontal+vertical scrollbars meet). Default: same as scrollbar-background
+scrollbar-corner-color = "#111122"
+
+# Scrollbar track hover color. Default: same as scrollbar-background
+scrollbar-background-hover = "#111122"
+
+# Scrollbar track active (while dragging). Default: same as scrollbar-background
+scrollbar-background-active = "#111122"
+
+# ── Links ────────────────────────────────────────────────────────────────────
+
+# Background of a link element. Default: "initial" (transparent)
+link-background = "initial"
+
+# Background of a link on hover. Default: $primary
+link-background-hover = "#0178D4"
+
+# Link text color. Default: $text
+link-color = "#80c8ff"
+
+# Link text style: underline, bold, italic, reverse, none, or space-separated combos.
+# Default: "underline"
+link-style = "underline"
+
+# Link text color on hover. Default: $text
+link-color-hover = "#ffffff"
+
+# Link text style on hover. Default: "bold not underline"
+link-style-hover = "bold not underline"
+
+# ── Footer / keybinding bar ──────────────────────────────────────────────────
+
+# Footer bar text color. Default: $foreground
+footer-foreground = "#e0e0e0"
+
+# Footer bar background. Default: $panel
+footer-background = "#0f3460"
+
+# Keybinding key text color (e.g. "F2", "Ctrl+S"). Default: $accent
+footer-key-foreground = "#ffa62b"
+
+# Keybinding key background. Default: "transparent"
+footer-key-background = "transparent"
+
+# Keybinding description text color. Default: $foreground
+footer-description-foreground = "#e0e0e0"
+
+# Keybinding description background. Default: "transparent"
+footer-description-background = "transparent"
+
+# Background of individual footer items. Default: "transparent"
+footer-item-background = "transparent"
+
+# ── Input cursor (Input, TextArea widgets) ───────────────────────────────────
+
+# Background color of the text input caret. Default: $foreground
+input-cursor-background = "#e0e0e0"
+
+# Foreground color behind the input caret. Default: $background
+input-cursor-foreground = "#1a1a2e"
+
+# Text style of the input caret: "none", "reverse", "bold", "underline", etc.
+# Default: "none"
+input-cursor-text-style = "reverse"
+
+# Background of selected/highlighted text in input widgets. Default: $primary-lighten-1 at 40% alpha
+input-selection-background = "#0178D4 40%"
+
+# ── Markdown headers ─────────────────────────────────────────────────────────
+
+# h1 text color. Default: $primary
+markdown-h1-color = "#0178D4"
+# h1 background. Default: "transparent"
+markdown-h1-background = "transparent"
+# h1 text style. Default: "bold"
+markdown-h1-text-style = "bold"
+
+# h2 text color. Default: $primary
+markdown-h2-color = "#0178D4"
+markdown-h2-background = "transparent"
+# h2 text style. Default: "underline"
+markdown-h2-text-style = "underline"
+
+# h3 text color. Default: $primary
+markdown-h3-color = "#0178D4"
+markdown-h3-background = "transparent"
+# h3 text style. Default: "bold"
+markdown-h3-text-style = "bold"
+
+# h4 text color. Default: $foreground
+markdown-h4-color = "#e0e0e0"
+markdown-h4-background = "transparent"
+# h4 text style. Default: "bold underline"
+markdown-h4-text-style = "bold underline"
+
+# h5 text color. Default: $foreground
+markdown-h5-color = "#e0e0e0"
+markdown-h5-background = "transparent"
+# h5 text style. Default: "bold"
+markdown-h5-text-style = "bold"
+
+# h6 text color. Default: $foreground-muted
+markdown-h6-color = "#c0c0c0"
+markdown-h6-background = "transparent"
+# h6 text style. Default: "bold"
+markdown-h6-text-style = "bold"
+
+# ── Buttons ───────────────────────────────────────────────────────────────────
+
+# Text color for standard (non-colored) buttons. Default: $foreground
+button-foreground = "#e0e0e0"
+
+# Text color for colored buttons (e.g. primary/secondary/error variants). Default: $text
+button-color-foreground = "#ffffff"
+
+# Text style applied when a button is focused. Default: "b reverse"
+# "b" = bold, "reverse" = reversed foreground/background
+button-focus-text-style = "b reverse"

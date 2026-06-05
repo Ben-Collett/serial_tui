@@ -1,15 +1,24 @@
 import codecs
+from collections.abc import Callable
+from dataclasses import dataclass
 from textual.app import App, ComposeResult
-from textual.containers import HorizontalGroup, Right, VerticalGroup
+from textual.containers import HorizontalGroup, VerticalGroup
 from textual.widgets import Button, Footer, Header, Input, Label, Switch, TextArea
 from completed_input import CompletedInput
 from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
-from config import get_theme
+from config import get_command_descriptions_override, get_commands_override, get_theme
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
+
+
+@dataclass
+class Command:
+    names: list[str]
+    description: str
+    callback: Callable[[str], None]
 
 
 def _unescape_escapes(text: str) -> str:
@@ -19,27 +28,8 @@ def _unescape_escapes(text: str) -> str:
     try:
         return codecs.decode(text.encode("latin-1"), "unicode_escape")
     except (ValueError, SyntaxError):
+
         return text
-
-
-command_suggestions = [
-    ("!r", "toggle \\r newline"),
-    ("!n", "toggle \\n newline"),
-    ("!rn", "toggle both \\r and \\n"),
-    ("!echo", "toggle local echo"),
-    ("!connect", "connect to device"),
-    ("!con", "connect to device"),
-    "!c",
-    ("!disconnect", "disconnect from device"),
-    ("!dis", "disconnect from device"),
-    ("!select", "open device selection"),
-    ("!s", "open device selection"),
-    ("!clear", "clear output terminal"),
-    ("!l", "clear output terminal"),
-    ("!throttle", "set or view throttle ms"),
-    ("!th", "set or view throttle ms"),
-    ("!flush", "flush buffered commands"),
-]
 
 
 class SerialTui(App):
@@ -49,6 +39,62 @@ class SerialTui(App):
     def __init__(self):
         super().__init__()
         self._connected = False
+
+        self.REAL_COMMANDS: list[Command] = [
+            Command(["r"], r"toggle \r newline", self._cmd_toggle_r),
+            Command(["n"], r"toggle \n newline", self._cmd_toggle_n),
+            Command(["rn"], r"toggle both \r and \n", self._cmd_toggle_rn),
+            Command(["ren"], r"toggle \r, \n and echo", self._cmd_toggle_ren),
+            Command(["echo"], "toggle local echo", self._cmd_toggle_echo),
+            Command(["togglec", "c"], "toggles device connection",
+                    self._cmd_toggle_connection),
+            Command(["con", "connect"],
+                    "connect to device", self._cmd_connect),
+            Command(["dis", "disconnect"],
+                    "disconnect from device", self._cmd_disconnect),
+            Command(["s", "select"], "open device selection",
+                    self._cmd_prompt_select_device),
+            Command(["clear", "l"], "clear output terminal", self._cmd_clear),
+            Command(["th", "throttle"], "set or view throttle ms",
+                    self._cmd_throttle),
+            Command(["flush"], "flush buffered commands", self._cmd_flush),
+        ]
+
+        self._real_command_map: dict[str, Command] = {}
+        self._user_command_map: dict[str, str | list[str]] = {}
+        for _cmd in self.REAL_COMMANDS:
+            for _name in _cmd.names:
+                self._real_command_map[_name] = _cmd
+
+    def _cmd_toggle_ren(self, *_):
+        self._cmd_toggle_r()
+        self._cmd_toggle_n()
+        self._cmd_toggle_echo()
+
+    def _cmd_toggle_rn(self, *_):
+        self._cmd_toggle_r()
+        self._cmd_toggle_n()
+
+    def _cmd_toggle_n(self, *_):
+        self._toggle_newline(r"\n")
+
+    def _cmd_toggle_echo(self, *_):
+        self._toggle_newline("echo")
+
+    def _cmd_toggle_r(self, *_):
+        self._toggle_newline(r"\r")
+
+    def _cmd_toggle_connection(self, *_):
+        self._toggle_connect()
+
+    def _cmd_connect(self, *_):
+        self._connect()
+
+    def _cmd_disconnect(self, *_):
+        manager.disconnect()
+
+    def _cmd_prompt_select_device(self, *_):
+        self.push_screen(SelectDeviceScreen(), self._device_selected)
 
     def notify_error(self, message: str) -> None:
         self.notify(message, severity="error", timeout=5)
@@ -70,14 +116,47 @@ class SerialTui(App):
             if theme is not None:
                 self.register_theme(theme)
 
+    def _default_commands(self):
+        out = {}
+        for command in self._real_command_map.keys():
+            out[command] = command
+        return out
+
     def reload_config(self):
         self.update_themes()
         config = load_config()
+
+        self._user_command_map = get_commands_override(
+            config) or self._default_commands()
+
         theme = get_theme(config)
         if theme not in self.available_themes:
             self.notify_error(not_reigistered_theme(theme, DEFAULT_THEME))
             theme = DEFAULT_THEME
         self.theme = theme
+
+        description_override = get_command_descriptions_override(config)
+        command_suggestions: list[str | tuple[str, str]] = []
+
+        for name, command in self._user_command_map.items():
+            original_name = name
+            name = "!"+name
+            if original_name in description_override:
+                command_suggestions.append(
+                    (name, description_override[original_name]))
+            elif isinstance(command, str):
+                real_command = self._real_command_map.get(command)
+                if real_command is None:
+                    self.notify_error(
+                        f"{command} is not a real command not adding")
+                    continue
+                command_suggestions.append(
+                    (name, real_command.description))
+            else:
+                command_suggestions.append((name, str(command)))
+
+        self.query_one("#input", CompletedInput).update_suggestions(
+            command_suggestions)
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):
@@ -156,6 +235,7 @@ class SerialTui(App):
                     section.query_one(Switch).value = rs.auto_return_carry
             if rs.throttle_ms is not None:
                 manager.throttle_ms = rs.throttle_ms
+                self._update_buffer_display()
         self._update_device_display()
 
     def _update_device_display(self):
@@ -171,51 +251,54 @@ class SerialTui(App):
                 sw.value = not sw.value
                 break
 
-    def _handle_command(self, text: str) -> None:
-        cmd = text[1:].strip().lower()
+    def _cmd_clear(self, *_) -> None:
+        self.query_one("#output", TextArea).text = ""
 
-        if cmd == "r":
-            self._toggle_newline(r"\r")
-        elif cmd == "n":
-            self._toggle_newline(r"\n")
-        elif cmd == "rn":
-            self._toggle_newline(r"\r")
-            self._toggle_newline(r"\n")
-        elif cmd == "echo":
-            self._toggle_newline("echo")
-        elif cmd in ("connect", "con"):
-            self._toggle_connect()
-        elif cmd in ("disconnect", "dis"):
-            manager.disconnect()
-        elif cmd == "c":
-            self._toggle_connect()
-        elif cmd in ("s", "select"):
-            self.push_screen(SelectDeviceScreen(), self._device_selected)
-        elif cmd in ("clear", "l"):
-            self.query_one("#output", TextArea).text = ""
-        elif cmd.startswith("throttle") or cmd == "th" or cmd.startswith("th "):
-            parts = cmd.split()
-            if len(parts) == 2:
-                try:
-                    ms = int(parts[1])
-                    if ms < 0:
-                        self._log_message("throttle must be >= 0")
-                    else:
-                        manager.throttle_ms = ms
-                        self._log_message(f"throttle set to {ms}ms")
-                except ValueError:
-                    self._log_message("usage: !throttle <ms>")
-            else:
-                self._log_message(f"throttle: {manager.throttle_ms}ms")
-        elif cmd == "flush":
-            count = manager.buffer_size
-            if count > 0:
-                manager.flush()
-                self._log_message(f"flushed {count} buffered command(s)")
-            else:
-                self._log_message("buffer empty")
+    def _cmd_throttle(self, args: str) -> None:
+        if args:
+            try:
+                ms = int(args)
+                if ms < 0:
+                    self._log_message("throttle must be >= 0")
+                else:
+                    manager.throttle_ms = ms
+                    self._update_buffer_display()
+                    self._log_message(f"throttle set to {ms}ms")
+            except ValueError:
+                self._log_message("usage: !throttle <ms>")
         else:
-            self._log_message(unknown_command(text))
+            self._log_message(f"throttle: {manager.throttle_ms}ms")
+
+    def _cmd_flush(self, *_) -> None:
+        count = manager.buffer_size
+        if count > 0:
+            manager.flush()
+            self._log_message(f"flushed {count} buffered command(s)")
+        else:
+            self._log_message("buffer empty")
+
+    def _execute_real_commands(self, commands: str | list[str], args: str) -> None:
+        if isinstance(commands, str):
+            commands = [commands]
+        for cmd_name in commands:
+            cmd = self._real_command_map.get(cmd_name)
+            if cmd is None:
+                self._log_message(f"real command '{cmd_name}' not found")
+            else:
+                cmd.callback(args)
+
+    def _handle_user_command(self, text: str) -> None:
+        text = text.lstrip("!")
+        parts = text.split(maxsplit=1)
+        name = parts[0]
+        args = parts[1] if len(parts) > 1 else ""
+
+        commands = self._user_command_map.get(name)
+        if commands is not None:
+            self._execute_real_commands(commands, args)
+            return
+
+        self.notify_error(unknown_command(f"!{name}"))
 
     def _send_data(self) -> None:
         inp = self.query_one("#input", Input)
@@ -227,7 +310,7 @@ class SerialTui(App):
             text = text[1:]
         elif text.startswith("!"):
             inp.value = ""
-            self._handle_command(text)
+            self._handle_user_command(text)
             return
 
         if not self._connected:
@@ -262,16 +345,29 @@ class SerialTui(App):
 
     def _toggle_connect(self) -> None:
         if not self._connected:
-            if manager.selected_device is None:
-                self._log_message(
-                    "no device selected – use 'select device' first.")
-                return
-            try:
-                manager.connect()
-            except Exception as e:
-                self._log_message(f"connection failed: {e}")
+            self._connect()
         else:
-            manager.disconnect()
+            self._disconnect
+
+    def _connect(self):
+        """
+        if already connected then disconnects and reconnects
+        """
+        if manager.selected_device is None:
+            self._log_message(
+                "no device selected – use 'select device' first.")
+            return
+        try:
+            manager.connect()
+        except Exception as e:
+            self._log_message(f"connection failed: {e}")
+
+    def _disconnect(self):
+        if manager.selected_device is None:
+            self._log_message(
+                "no device selected – use 'select device' first.")
+            return
+        manager.disconnect()
 
     def on_unmount(self) -> None:
         manager.disconnect()
@@ -313,7 +409,7 @@ class NewLineSet(VerticalGroup):
 
 class TopBar(HorizontalGroup):
     def compose(self) -> ComposeResult:
-        yield CompletedInput(id="input", suggestions=command_suggestions)
+        yield CompletedInput(id="input", suggestions=[])
         yield Button("send", id="send")
 
 

@@ -1,7 +1,7 @@
 from rich.text import Text as RichText
 from textual.app import App, ComposeResult
 from textual.events import Key
-from textual.widgets import Input, ListView, ListItem, Label, Static
+from textual.widgets import Input, ListView, ListItem,  Static
 
 
 class _SuggestionList(ListView):
@@ -24,8 +24,41 @@ class CompletedInput(Input):
     def __init__(self, suggestions=None, max_suggestions=4, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._max_suggestions = max_suggestions
-        raw = suggestions or [
-            "aab", "aac", "aad", "aae", "aaf", "abc", ("dhi", "hello there human person like this"), "dnone", ("dlong", "this is a super duper long description beldev it or not")]
+        self._autocomplete_enabled = True
+        self._set_suggestion_data(suggestions)
+        self._current_filtered = []
+        self._list_view = _SuggestionList(self._on_suggestion_selected)
+        self._shown = False
+        self._user_navigated = False
+
+    def set_autocomplete(self, val: bool) -> None:
+        if val ^ self._autocomplete_enabled:
+            self._toggle_autocomplete()
+
+    def _toggle_autocomplete(self) -> None:
+        self._autocomplete_enabled = not self._autocomplete_enabled
+        if not self._autocomplete_enabled:
+            self._hide_suggestions()
+
+    @property
+    def autocomplete_enabled(self) -> bool:
+        return self._autocomplete_enabled
+
+    def update_suggestions(self, raw_suggestions: list) -> None:
+        self._set_suggestion_data(raw_suggestions)
+        self._current_filtered = []
+        if self._autocomplete_enabled and self.value:
+            if self._update_suggestions(self.value):
+                self._show_suggestions()
+            else:
+                self._hide_suggestions()
+
+    def _set_suggestion_data(self, raw):
+        if raw is None:
+            raw = [
+                "aab", "aac", "aad", "aae", "aaf", "abc",
+                ("dhi", "hello there human person like this"),
+                "dnone", ("dlong", "this is a super duper long description beldev it or not")]
         self._suggestion_data = []
         for s in raw:
             if isinstance(s, str):
@@ -33,10 +66,6 @@ class CompletedInput(Input):
             else:
                 self._suggestion_data.append(
                     (s[0], s[1] if len(s) > 1 else None))
-        self._current_filtered = []
-        self._list_view = _SuggestionList(self._on_suggestion_selected)
-        self._shown = False
-        self._user_navigated = False
 
     def on_mount(self) -> None:
         self.screen.mount(self._list_view)
@@ -48,6 +77,8 @@ class CompletedInput(Input):
         self._list_view.styles.display = "none"
 
     def on_input_changed(self, event: Input.Changed) -> None:
+        if not self._autocomplete_enabled:
+            return
         has_suggestions = self._update_suggestions(event.value)
         if has_suggestions and event.value:
             self._show_suggestions()
@@ -55,6 +86,8 @@ class CompletedInput(Input):
             self._hide_suggestions()
 
     def on_focus(self) -> None:
+        if not self._autocomplete_enabled:
+            return
         if self.value:
             if self._update_suggestions(self.value):
                 self._show_suggestions()

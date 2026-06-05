@@ -4,4 +4,4 @@ def not_reigistered_theme(theme, default_theme):
 
 
 def unknown_command(text):
-    return "unknown command '{text}' — use !! to send literal '!', or use a valid command."
+    return f"unknown command '{text}' — use !! to send literal '!', or use a valid command."

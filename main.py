@@ -372,7 +372,7 @@ class SerialTui(App):
         if not self._connected:
             self._connect()
         else:
-            self._disconnect
+            self._disconnect()
 
     def _connect(self):
         """

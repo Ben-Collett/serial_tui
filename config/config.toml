@@ -5,31 +5,32 @@ theme = "textual-dark"
 
 [autocomplete]
 enabled = true
-command_auto_complete = true
 
 # if you put commands section with out any commands then there will be no commands
 # if you want to use custom commands and the original commands then you need to
 # re define them
 # [commands]
-# r = "r"
-# n = "n"
-# rn = "rn"
-# echo = "echo"
-# togglec = "togglec"
-# c = "c"
-# con = "con"
-# connect = "connect"
-# dis = "dis"
-# disconnect = "disconnect"
-# s = "s"
-# select = "select"
-# clear = "clear"
-# l = "l"
-# th = "th"
-# throttle = "th"
-# flush = "flush"
-# ren = "ren"
-# "ren" = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple
+# r = "r" # toggles return line carry feed \r
+# n = "n" # toggles newline \n
+# rl = "rl" # reloads the config
+# reload = "reload" # reloads the config
+# rn = "rn" # toggles both \r and \n
+# echo = "echo" # toggles echo
+# togglec = "togglec" # toggles device connection for selected device
+# c = "c" # toggles device connection for selected device
+# con = "con" # connects to selected device disconnects and reconnects if already connected
+# connect = "connect" # connects to selected device disconnects and reconnects if already connected
+# dis = "dis" # disconnects from selected device does nothing if already disconnected
+# disconnect = "disconnect" # disconnects from selected device does nothing if already disconnected
+# s = "s" # opens device selection screen
+# select = "select" # opens device selection screen
+# clear = "clear" # clears output
+# l = "l" # clears output
+# th = "th" # lets you set the throttle rate using th <ms>, Ex: th 100
+# throttle = "th" # same as th
+# flush = "flush" # flushes all queued commands that where throtteled
+# ren = "ren" # toggles \r \n and echo
+# ren = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple
 
 # you can provide a descriptions for any command builtin or custom
 # you get autocomplete suggestions in the popup

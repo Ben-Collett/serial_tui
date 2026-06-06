@@ -18,6 +18,10 @@ def get_theme(config: dict) -> str:
     return safe_get(config, str, DEFAULT_THEME, "appearance", "theme")
 
 
+def get_auto_complete_enabled(config: dict):
+    return safe_get(config, bool, True, "autocomplete", "enabled")
+
+
 def get_commands_override(config: dict) -> dict[str, str | list[str]] | None:
     # TODO enforce typing
     return config.get("commands")

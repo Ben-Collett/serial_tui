@@ -9,7 +9,7 @@ from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
-from config import get_command_descriptions_override, get_commands_override, get_theme
+from config import get_auto_complete_enabled, get_command_descriptions_override, get_commands_override, get_theme
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
 
@@ -43,6 +43,7 @@ class SerialTui(App):
         self.REAL_COMMANDS: list[Command] = [
             Command(["r"], r"toggle \r newline", self._cmd_toggle_r),
             Command(["n"], r"toggle \n newline", self._cmd_toggle_n),
+            Command(["rl", "reload"], r"reloads the config", self._cmd_reload),
             Command(["rn"], r"toggle both \r and \n", self._cmd_toggle_rn),
             Command(["ren"], r"toggle \r, \n and echo", self._cmd_toggle_ren),
             Command(["echo"], "toggle local echo", self._cmd_toggle_echo),
@@ -96,6 +97,9 @@ class SerialTui(App):
     def _cmd_prompt_select_device(self, *_):
         self.push_screen(SelectDeviceScreen(), self._device_selected)
 
+    def _cmd_reload(self, *_):
+        self.reload_config()
+
     def notify_error(self, message: str) -> None:
         self.notify(message, severity="error", timeout=5)
 
@@ -135,28 +139,17 @@ class SerialTui(App):
             theme = DEFAULT_THEME
         self.theme = theme
 
-        description_override = get_command_descriptions_override(config)
-        command_suggestions: list[str | tuple[str, str]] = []
+        autocomplete_enabled = get_auto_complete_enabled(config)
+        self.query_one("#input", CompletedInput).set_autocomplete_enabled(
+            autocomplete_enabled)
 
-        for name, command in self._user_command_map.items():
-            original_name = name
-            name = "!"+name
-            if original_name in description_override:
-                command_suggestions.append(
-                    (name, description_override[original_name]))
-            elif isinstance(command, str):
-                real_command = self._real_command_map.get(command)
-                if real_command is None:
-                    self.notify_error(
-                        f"{command} is not a real command not adding")
-                    continue
-                command_suggestions.append(
-                    (name, real_command.description))
-            else:
-                command_suggestions.append((name, str(command)))
+        if autocomplete_enabled:
+            description_override = get_command_descriptions_override(config)
+            completion_suggestions = _make_user_command_completions(
+                self._user_command_map, description_override, self._real_command_map, self.notify_error)
 
-        self.query_one("#input", CompletedInput).update_suggestions(
-            command_suggestions)
+            self.query_one("#input", CompletedInput).update_suggestions(
+                completion_suggestions)
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):
@@ -411,6 +404,26 @@ class TopBar(HorizontalGroup):
     def compose(self) -> ComposeResult:
         yield CompletedInput(id="input", suggestions=[])
         yield Button("send", id="send")
+
+
+def _make_user_command_completions(user_commands: dict, description_override: dict, real_commands: dict, on_error: Callable) -> list[tuple[str, str]]:
+    completion_suggestions: list[tuple[str, str]] = []
+    for name, command in user_commands.items():
+        original_name = name
+        name = "!"+name
+        if original_name in description_override:
+            completion_suggestions.append(
+                (name, description_override[original_name]))
+        elif isinstance(command, str):
+            real_command = real_commands.get(command)
+            if real_command is None:
+                on_error(f"{command} is not a real command not adding")
+                continue
+            completion_suggestions.append(
+                (name, real_command.description))
+        else:
+            completion_suggestions.append((name, str(command)))
+    return completion_suggestions
 
 
 if __name__ == "__main__":

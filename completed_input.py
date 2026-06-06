@@ -31,7 +31,7 @@ class CompletedInput(Input):
         self._shown = False
         self._user_navigated = False
 
-    def set_autocomplete(self, val: bool) -> None:
+    def set_autocomplete_enabled(self, val: bool) -> None:
         if val ^ self._autocomplete_enabled:
             self._toggle_autocomplete()
 

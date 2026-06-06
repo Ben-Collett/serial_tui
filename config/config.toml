@@ -44,6 +44,9 @@ enabled = true
 "ctrl+n" = "n"
 "ctrl+g" = "reload"
 
-[devices.charachroder]
-description = "(?i)charachorder"
-baud_rate = 11520
+[[devices]]
+name = "charachorder"
+description_pattern = "(?i)charachorder"
+auto_n = true
+auto_r = true
+baud_rate = 115200

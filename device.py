@@ -12,7 +12,7 @@ class RecommendedDeviceSettings:
     auto_new_line: bool | None = None
     auto_return_carry: bool | None = None
     throttle_ms: int | None = None
-    auto_complete_suggestions: dict | None = None
+    auto_complete_suggestions: list[tuple[str, str]] | None = None
 
 
 @dataclass
@@ -28,8 +28,3 @@ class Device:
     @staticmethod
     def available_devices() -> list["Device"]:
         return [Device._from_port(port) for port in _list_ports()]
-
-    def recommended_settings(self) -> RecommendedDeviceSettings:
-        if "charachorder" in self.description.lower():
-            return RecommendedDeviceSettings(baud_rate=115200, auto_new_line=True, auto_return_carry=True, throttle_ms=100)
-        return RecommendedDeviceSettings()

@@ -9,9 +9,11 @@ from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
-from config import get_auto_complete_enabled, get_command_descriptions_override, get_commands_override, get_theme
+from config import (get_auto_complete_enabled, get_command_descriptions_override,
+                    get_commands_override, get_devices_config, get_theme)
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
+from recommended_settings_resolver import RecommendedSettingsResolver
 
 
 @dataclass
@@ -39,6 +41,7 @@ class SerialTui(App):
     def __init__(self):
         super().__init__()
         self._connected = False
+        self._resolver = RecommendedSettingsResolver()
 
         self.REAL_COMMANDS: list[Command] = [
             Command(["r"], r"toggle \r newline", self._cmd_toggle_r),
@@ -63,6 +66,8 @@ class SerialTui(App):
 
         self._real_command_map: dict[str, Command] = {}
         self._user_command_map: dict[str, str | list[str]] = {}
+        self._command_completion_suggestions: list[tuple[str, str]] = []
+        self._device_completion_suggestions: list[tuple[str, str]] = []
         for _cmd in self.REAL_COMMANDS:
             for _name in _cmd.names:
                 self._real_command_map[_name] = _cmd
@@ -95,7 +100,8 @@ class SerialTui(App):
         manager.disconnect()
 
     def _cmd_prompt_select_device(self, *_):
-        self.push_screen(SelectDeviceScreen(), self._device_selected)
+        self.push_screen(SelectDeviceScreen(
+            self._resolver), self._device_selected)
 
     def _cmd_reload(self, *_):
         self.reload_config()
@@ -126,6 +132,22 @@ class SerialTui(App):
             out[command] = command
         return out
 
+    def _update_device_suggestions(self):
+        device = manager.selected_device
+        suggestions = []
+        if device is not None:
+            matched = self._resolver.get_device_settings(device)
+            settings = matched[0]
+            suggestions = settings.auto_complete_suggestions or []
+
+        self._device_completion_suggestions = suggestions
+
+    def _update_input_suggestions(self):
+        suggestions = list(self._command_completion_suggestions)
+        suggestions.extend(self._device_completion_suggestions)
+        self.query_one("#input", CompletedInput).update_suggestions(
+            suggestions)
+
     def reload_config(self):
         self.update_themes()
         config = load_config()
@@ -143,13 +165,16 @@ class SerialTui(App):
         self.query_one("#input", CompletedInput).set_autocomplete_enabled(
             autocomplete_enabled)
 
+        self._resolver.auto_complete_enabled = autocomplete_enabled
+        self._resolver.update(get_devices_config(config))
+
+        self._update_device_suggestions()
+
         if autocomplete_enabled:
             description_override = get_command_descriptions_override(config)
-            completion_suggestions = _make_user_command_completions(
+            self._command_completion_suggestions = _make_user_command_completions(
                 self._user_command_map, description_override, self._real_command_map, self.notify_error)
-
-            self.query_one("#input", CompletedInput).update_suggestions(
-                completion_suggestions)
+            self._update_input_suggestions()
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):
@@ -205,7 +230,8 @@ class SerialTui(App):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "selectbtn":
-            self.push_screen(SelectDeviceScreen(), self._device_selected)
+            self.push_screen(SelectDeviceScreen(
+                self._resolver), self._device_selected)
         elif event.button.id == "send":
             self._send_data()
         elif event.button.id == "conbtn":
@@ -219,17 +245,23 @@ class SerialTui(App):
             return
         manager.selected_device = data.device
         manager.baudrate = data.baud_rate
-        if data.settings_accepted and data.recommend_settings is not None:
+        if data.recommend_settings is not None:
             rs = data.recommend_settings
-            for section in self.query_one("#newlineset", NewLineSet).query(ToggleSection):
-                if r"\n" in section.label and rs.auto_new_line is not None:
-                    section.query_one(Switch).value = rs.auto_new_line
-                elif r"\r" in section.label and rs.auto_return_carry is not None:
-                    section.query_one(Switch).value = rs.auto_return_carry
-            if rs.throttle_ms is not None:
-                manager.throttle_ms = rs.throttle_ms
-                self._update_buffer_display()
+            if data.settings_accepted:
+                for section in self.query_one("#newlineset", NewLineSet).query(ToggleSection):
+                    if r"\n" in section.label and rs.auto_new_line is not None:
+                        section.query_one(Switch).value = rs.auto_new_line
+                    elif r"\r" in section.label and rs.auto_return_carry is not None:
+                        section.query_one(Switch).value = rs.auto_return_carry
+                if rs.throttle_ms is not None:
+                    manager.throttle_ms = rs.throttle_ms
+                    self._update_buffer_display()
+            if rs.auto_complete_suggestions:
+                self._device_completion_suggestions = rs.auto_complete_suggestions
+            else:
+                self._device_completion_suggestions = []
         self._update_device_display()
+        self._update_input_suggestions()
 
     def _update_device_display(self):
         dev = manager.selected_device

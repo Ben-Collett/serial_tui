@@ -8,6 +8,7 @@ from textual.containers import Container, HorizontalGroup
 from textual.widgets import Button, Input, Label, ListView, ListItem
 from device import Device, RecommendedDeviceSettings
 from my_manager import manager
+from recommended_settings_resolver import RecommendedSettingsResolver
 
 
 @dataclass
@@ -19,6 +20,10 @@ class SelectDeviceData:
 
 
 class SelectDeviceScreen(ModalScreen):
+    def __init__(self, resolver: RecommendedSettingsResolver):
+        self._resolver = resolver
+        super().__init__()
+
     def compose(self) -> ComposeResult:
         self.devices = manager.get_devices()
         self._selected_device: Device | None = None
@@ -42,7 +47,7 @@ class SelectDeviceScreen(ModalScreen):
             self._push_baud_rate_screen()
 
     def _push_baud_rate_screen(self):
-        self.app.push_screen(BaudRateScreen(self._selected_device),
+        self.app.push_screen(BaudRateScreen(self._selected_device, self._resolver),
                              self._on_baud_rate_done)
 
     def _on_baud_rate_done(self, baudrate: int | None) -> None:
@@ -52,9 +57,11 @@ class SelectDeviceScreen(ModalScreen):
         self._check_recommended_settings()
 
     def _check_recommended_settings(self):
-        settings = self._selected_device.recommended_settings()
-        if settings.auto_new_line is not None or settings.auto_return_carry is not None or settings.throttle_ms is not None:
+        matched = self._resolver.get_device_settings(self._selected_device)
+        settings = matched[0] if matched else RecommendedDeviceSettings()
+        if settings.auto_complete_suggestions or settings.auto_new_line is not None or settings.auto_return_carry is not None or settings.throttle_ms is not None:
             self._recommend_settings = settings
+        if settings.auto_new_line is not None or settings.auto_return_carry is not None or settings.throttle_ms is not None:
             self.app.push_screen(RecommendedSettingsScreen(
                 settings), self._on_settings_done)
         else:
@@ -100,8 +107,9 @@ class SelectDeviceScreen(ModalScreen):
 
 
 class BaudRateScreen(ModalScreen):
-    def __init__(self, device: Device):
+    def __init__(self, device: Device, resolver: RecommendedSettingsResolver):
         self.device = device
+        self._resolver = resolver
         self.standard_rates = [300, 1200, 2400,
                                9600, 19200, 38400, 57600, 115200]
         super().__init__()
@@ -128,7 +136,8 @@ class BaudRateScreen(ModalScreen):
         self._show_list()
 
     def _get_rates(self):
-        recommended = self.device.recommended_settings().baud_rate
+        matched = self._resolver.get_device_settings(self.device)
+        recommended = matched[0].baud_rate if matched else None
         rates_set = set(self.standard_rates)
         all_rates = list(self.standard_rates)
         if recommended and recommended not in rates_set:

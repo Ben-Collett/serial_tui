@@ -58,21 +58,25 @@ def _parse_json(txt: str) -> dict:
         return {}
 
 
-def _load_device_compleitions(device_name: str) -> dict[str, str]:
+def load_device_compleitions(device_name: str) -> list[tuple[str, str]]:
     device_file = get_device_config(device_name)
-    out: dict[str, str] = {}
+    out: list[tuple[str, str]] = []
+    content = None
     try:
-        content = device_file.read_text()
+        content = device_file.read_text().splitlines()
         for line in content:
             data = _parse_json(line)
-            if data == {}:
+            if not isinstance(data, dict) or data == {}:
                 continue
             if _NAME_KEY not in data:
                 print("no name in device line", line)
                 continue
-            out[data[_NAME_KEY]] = data.get(_DESCRIPTION_KEY) or ""
+            name = data[_NAME_KEY]
+            description = data.get(_DESCRIPTION_KEY) or ""
+            out.append((name, description))
     except FileNotFoundError:
         pass
+
     return out
 
 
@@ -85,4 +89,4 @@ def get_config_toml() -> Path:
 
 
 def get_device_config(device_name: str) -> Path:
-    return get_device_dir()/f"{device_name}{DEVICES_EXTENSION}"
+    return get_device_dir()/f"{device_name}.{DEVICES_EXTENSION}"

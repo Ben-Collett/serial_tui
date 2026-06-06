@@ -30,3 +30,7 @@ def get_commands_override(config: dict) -> dict[str, str | list[str]] | None:
 def get_command_descriptions_override(config: dict) -> dict[str, str]:
     # TODO enforce typing
     return config.get("command_descriptions") or {}
+
+
+def get_devices_config(config: dict) -> list[dict]:
+    return config.get("devices") or []

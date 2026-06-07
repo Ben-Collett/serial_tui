@@ -9,6 +9,8 @@ from textual.widgets import Button, Input, Label, ListView, ListItem
 from device import Device, RecommendedDeviceSettings
 from my_manager import manager
 from recommended_settings_resolver import RecommendedSettingsResolver
+from debug_utils import logger
+from math_utils import try_parse_int, clamp_int
 
 
 @dataclass
@@ -99,6 +101,33 @@ class SelectDeviceScreen(ModalScreen):
         if lv.index is not None and lv.index > 0:
             lv.index -= 1
 
+    def on_key(self, event):
+        key = event.key
+        if key == "g":
+            self.go_to_top()
+            return
+        elif key == "G":
+            self.go_to_bottom()
+            return
+
+        index = try_parse_int(key)
+        if index is not None:
+            index = _map_key_index(index)
+            self.go_to(index)
+
+    def go_to_top(self):
+        lv = self.query_one(ListView)
+        lv.index = 0
+
+    def go_to_bottom(self):
+        lv = self.query_one(ListView)
+        if len(lv) > 0:
+            lv.index = len(lv) - 1
+
+    def go_to(self, index):
+        lv = self.query_one(ListView)
+        lv.index = clamp_int(0, len(lv)-1, index)
+
     def key_l(self) -> None:
         lv = self.query_one(ListView)
         if self.devices and lv.index is not None:
@@ -112,6 +141,8 @@ class BaudRateScreen(ModalScreen):
         self._resolver = resolver
         self.standard_rates = [300, 1200, 2400,
                                9600, 19200, 38400, 57600, 115200]
+        self.keys = {"j": self.go_down_one, "k": self.go_up_one,
+                     "g": self.go_to_top, "G": self.go_to_bottom}
         super().__init__()
 
     def compose(self) -> ComposeResult:
@@ -195,19 +226,42 @@ class BaudRateScreen(ModalScreen):
     def key_escape(self) -> None:
         self.dismiss(None)
 
-    def key_j(self) -> None:
+    def on_key(self, event):
+        key = event.key
         if not self.query_one("#list-view").display:
             return
+
+        if key in self.keys:
+            self.keys[key]()
+            return
+
+        index = try_parse_int(key)
+        if index is not None:
+            index = _map_key_index(index)
+            self.go_to(index)
+
+    def go_down_one(self) -> None:
         lv = self.query_one("#rate-list", ListView)
         if lv.index is not None and lv.index < len(lv) - 1:
             lv.index += 1
 
-    def key_k(self) -> None:
-        if not self.query_one("#list-view").display:
-            return
+    def go_up_one(self) -> None:
         lv = self.query_one("#rate-list", ListView)
         if lv.index is not None and lv.index > 0:
             lv.index -= 1
+
+    def go_to_top(self) -> None:
+        lv = self.query_one("#rate-list", ListView)
+        lv.index = 0
+
+    def go_to_bottom(self) -> None:
+        lv = self.query_one("#rate-list", ListView)
+        if len(lv) > 0:
+            lv.index = len(lv)-1
+
+    def go_to(self, index: int):
+        lv = self.query_one("#rate-list", ListView)
+        lv.index = clamp_int(0, len(lv), index)
 
     def key_l(self) -> None:
         if not self.query_one("#list-view").display:
@@ -277,3 +331,14 @@ class RecommendedSettingsScreen(ModalScreen):
 
     def key_escape(self) -> None:
         self.dismiss(None)
+
+
+def _map_key_index(index: int):
+    """
+    take a index from keys 1 through 0
+    1 is mapped to 0, 2 get's mapped to 1, and 0 get's mapped to  9
+    """
+    index -= 1
+    if index == -1:
+        index = 9
+    return index

@@ -320,6 +320,9 @@ class SerialTui(App):
     def _handle_user_command(self, text: str) -> None:
         text = text.lstrip("!")
         parts = text.split(maxsplit=1)
+        if not parts:
+            self.notify_error("! is not a command — use !! to send a literal !")
+            return
         name = parts[0]
         args = parts[1] if len(parts) > 1 else ""
 

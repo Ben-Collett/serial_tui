@@ -50,6 +50,8 @@ class SerialTui(App):
             Command(["rn"], r"toggle both \r and \n", self._cmd_toggle_rn),
             Command(["ren"], r"toggle \r, \n and echo", self._cmd_toggle_ren),
             Command(["echo"], "toggle local echo", self._cmd_toggle_echo),
+            Command(["p", "pallett"], "shows command pallett",
+                    self._cmd_pallett),
             Command(["togglec", "c"], "toggles device connection",
                     self._cmd_toggle_connection),
             Command(["con", "connect"],
@@ -105,6 +107,9 @@ class SerialTui(App):
 
     def _cmd_reload(self, *_):
         self.reload_config()
+
+    def _cmd_pallett(self, *_):
+        self.action_command_palette()
 
     def notify_error(self, message: str) -> None:
         self.notify(message, severity="error", timeout=5)

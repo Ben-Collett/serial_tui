@@ -38,11 +38,13 @@ enabled = true
 # "ren" = "toggles both newlines and echo"
 
 [keybindings]
-"ctrl+l" = "clear"
 "ctrl+s" = "select"
+"ctrl+l" = "clear"
 "ctrl+r" = "r"
 "ctrl+n" = "n"
 "ctrl+g" = "reload"
+"ctrl+c" = "quit"
+"ctrl+q" = "clear"
 
 [[devices]]
 name = "charachorder"

@@ -1,19 +1,20 @@
 import codecs
 from collections.abc import Callable
 from dataclasses import dataclass
-from textual.app import App, ComposeResult
+from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalGroup
-from textual.widgets import Button, Footer, Header, Input, Label, Switch, TextArea
+from textual.widgets import Button, Header, Input, Label, Switch, TextArea
 from completed_input import CompletedInput
 from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
 from config import (get_auto_complete_enabled, get_command_descriptions_override,
-                    get_commands_override, get_devices_config, get_theme)
+                    get_commands_override, get_devices_config, get_keybindings, get_theme)
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
 from recommended_settings_resolver import RecommendedSettingsResolver
+from debug_utils import logger
 
 
 @dataclass
@@ -36,7 +37,11 @@ def _unescape_escapes(text: str) -> str:
 
 class SerialTui(App):
     CSS_PATH = "main_screen.scss"
-    BINDINGS = []
+
+    BINDINGS = [
+        Binding("ctrl+q", "do_nothing"),
+        Binding("ctrl+c", "do_nothing"),
+    ]
 
     def __init__(self):
         super().__init__()
@@ -49,6 +54,8 @@ class SerialTui(App):
             Command(["rl", "reload"], r"reloads the config", self._cmd_reload),
             Command(["rn"], r"toggle both \r and \n", self._cmd_toggle_rn),
             Command(["ren"], r"toggle \r, \n and echo", self._cmd_toggle_ren),
+            Command(["q", "quit"], r"terminates the program",
+                    self._cmd_quit),
             Command(["echo"], "toggle local echo", self._cmd_toggle_echo),
             Command(["p", "pallett"], "shows command pallett",
                     self._cmd_pallett),
@@ -69,6 +76,7 @@ class SerialTui(App):
         self._real_command_map: dict[str, Command] = {}
         self._user_command_map: dict[str, str | list[str]] = {}
         self._command_completion_suggestions: list[tuple[str, str]] = []
+        self._keybinding_map: dict[str, str] = {}
         self._device_completion_suggestions: list[tuple[str, str]] = []
         for _cmd in self.REAL_COMMANDS:
             for _name in _cmd.names:
@@ -78,6 +86,9 @@ class SerialTui(App):
         self._cmd_toggle_r()
         self._cmd_toggle_n()
         self._cmd_toggle_echo()
+
+    def _cmd_quit(self, *_):
+        exit()
 
     def _cmd_toggle_rn(self, *_):
         self._cmd_toggle_r()
@@ -119,7 +130,6 @@ class SerialTui(App):
         yield TopBar(id="topbar")
         yield TextArea(id="output", read_only=True)
         yield StatusBar(id="statusbar")
-        yield Footer()
 
     def on_mount(self) -> None:
         self.reload_config()
@@ -153,6 +163,30 @@ class SerialTui(App):
         self.query_one("#input", CompletedInput).update_suggestions(
             suggestions)
 
+    def action_do_nothing(self, *_):
+        """
+        used to override default behavior of ctrl+c and ctrl+q
+        """
+        pass
+
+    def on_key(self, event):
+        cmd_name = self._keybinding_map.get(event.key)
+        if cmd_name is not None:
+            self._execute_real_commands(cmd_name, "")
+        event.stop()
+
+    def _update_keybindings(self, config: dict) -> None:
+        self._keybinding_map.clear()
+
+        keybindings = get_keybindings(config)
+        for keys, cmd_name in keybindings.items():
+            cmd = self._real_command_map.get(cmd_name)
+            if cmd is None:
+                self._log_message(
+                    f"keybinding '{keys}': command '{cmd_name}' not found")
+                continue
+            self._keybinding_map[keys] = cmd_name
+
     def reload_config(self):
         self.update_themes()
         config = load_config()
@@ -180,6 +214,8 @@ class SerialTui(App):
             self._command_completion_suggestions = _make_user_command_completions(
                 self._user_command_map, description_override, self._real_command_map, self.notify_error)
             self._update_input_suggestions()
+
+        self._update_keybindings(config)
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):
@@ -321,7 +357,8 @@ class SerialTui(App):
         text = text.lstrip("!")
         parts = text.split(maxsplit=1)
         if not parts:
-            self.notify_error("! is not a command — use !! to send a literal !")
+            self.notify_error(
+                "! is not a command — use !! to send a literal !")
             return
         name = parts[0]
         args = parts[1] if len(parts) > 1 else ""
@@ -407,6 +444,9 @@ class SerialTui(App):
 
     def action_toggle_dark(self) -> None:
         pass
+
+    def action_command(self, cmd_name: str) -> None:
+        self._execute_real_commands(cmd_name, "")
 
 
 class StatusBar(HorizontalGroup):

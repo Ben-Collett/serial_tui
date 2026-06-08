@@ -34,3 +34,7 @@ def get_command_descriptions_override(config: dict) -> dict[str, str]:
 
 def get_devices_config(config: dict) -> list[dict]:
     return config.get("devices") or []
+
+
+def get_keybindings(config: dict) -> dict[str, str]:
+    return config.get("keybindings") or {}

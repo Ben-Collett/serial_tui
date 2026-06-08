@@ -57,3 +57,28 @@ Screen {
   border: solid #FF4136;
   color: #FF4136;
 }
+
+CustomFooter {
+  height: 1;
+  dock: bottom;
+  background: $panel;
+  color: $text;
+  padding: 0 1;
+}
+
+KeyBinding {
+  width: auto;
+  margin: 0 1;
+}
+
+KeyBinding .key {
+  width: auto;
+  color: $text;
+  text-style: bold;
+  margin-right: 1;
+}
+
+KeyBinding .desc {
+  width: auto;
+  color: $text-disabled;
+}

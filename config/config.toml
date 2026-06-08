@@ -11,6 +11,7 @@ enabled = true
 # re define them
 # [commands]
 # through the first ren these are the default commands
+# send = "send" # simply sends whatever comes after it
 # r = "r" # toggles return line carry feed \r
 # n = "n" # toggles newline \n
 # rl = "rl" # reloads the config
@@ -59,10 +60,12 @@ enabled = true
 
 # you can bind a key to a command that takes arguments like this
 # "ctrl+t" = "th 50"
+# "ctrl+t" = "send CMD"
 
 [[devices]]
 name = "charachorder"
 description_pattern = "(?i)charachorder"
+throttle_ms = 100
 auto_n = true
 auto_r = true
 baud_rate = 115200

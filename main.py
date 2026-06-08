@@ -77,6 +77,7 @@ class SerialTui(App):
             Command(["th", "throttle"], "set or view throttle ms",
                     self._cmd_throttle),
             Command(["flush", "fl"], "flush buffered commands", self._cmd_flush),
+            Command(["send"], "send data to device", self._cmd_send),
         ]
 
         self._real_command_map: dict[str, Command] = {}
@@ -349,6 +350,35 @@ class SerialTui(App):
             self._log_message(f"flushed {count} buffered command(s)")
         else:
             self._log_message("buffer empty")
+
+    def _cmd_send(self, args: str) -> None:
+        if not args:
+            self._log_message("usage: !send <data>")
+            return
+        if not self._connected:
+            self._log_message("no device connected")
+            return
+        text = _unescape_escapes(args)
+        suffix = ""
+        echo = False
+        for section in self.query_one("#newlineset", NewLineSet).query(ToggleSection):
+            sw = section.query_one(Switch)
+            if not sw.value:
+                continue
+            if r"\r" in section.label:
+                suffix += "\r"
+            elif r"\n" in section.label:
+                suffix += "\n"
+            elif "echo" in section.label:
+                echo = True
+        data = text + suffix
+        try:
+            manager.write(data.encode())
+        except Exception as e:
+            self._log_message(f"send failed: {e}")
+            return
+        if echo:
+            self._append_data(data)
 
     def _screen_safe_execute_real_commands(self, commands: str | list[str], args: str) -> None:
         """

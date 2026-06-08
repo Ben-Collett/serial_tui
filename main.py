@@ -186,7 +186,8 @@ class SerialTui(App):
 
         keybindings = get_keybindings(config)
         for keys, cmd_name in keybindings.items():
-            cmd = self._real_command_map.get(cmd_name)
+            base_name = cmd_name.split(maxsplit=1)[0] if isinstance(cmd_name, str) else cmd_name
+            cmd = self._real_command_map.get(base_name)
             if cmd is None:
                 self._log_message(
                     f"keybinding '{keys}': command '{cmd_name}' not found")
@@ -370,12 +371,15 @@ class SerialTui(App):
                 if command not in GLOBAL_COMMANDS:
                     return
 
-        for cmd_name in commands:
+        for entry in commands:
+            parts = entry.split(maxsplit=1)
+            cmd_name = parts[0]
+            cmd_args = parts[1] if len(parts) > 1 else args
             cmd = self._real_command_map.get(cmd_name)
             if cmd is None:
                 self._log_message(f"real command '{cmd_name}' not found")
             else:
-                cmd.callback(args)
+                cmd.callback(cmd_args)
 
     def _handle_user_command(self, text: str) -> None:
         text = text.lstrip("!")
@@ -519,14 +523,23 @@ def _make_user_command_completions(user_commands: dict, description_override: di
             completion_suggestions.append(
                 (name, description_override[original_name]))
         elif isinstance(command, str):
-            real_command = real_commands.get(command)
+            cmd_name = command.split(maxsplit=1)[0]
+            real_command = real_commands.get(cmd_name)
             if real_command is None:
                 on_error(f"{command} is not a real command not adding")
                 continue
             completion_suggestions.append(
                 (name, real_command.description))
         else:
-            completion_suggestions.append((name, str(command)))
+            descriptions = []
+            for entry in command:
+                cmd_name = entry.split(maxsplit=1)[0]
+                cmd = real_commands.get(cmd_name)
+                if cmd:
+                    descriptions.append(cmd.description)
+                else:
+                    descriptions.append(entry)
+            completion_suggestions.append((name, ", ".join(descriptions)))
     return completion_suggestions
 
 

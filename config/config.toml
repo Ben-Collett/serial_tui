@@ -10,6 +10,7 @@ enabled = true
 # if you want to use custom commands and the original commands then you need to
 # re define them
 # [commands]
+# through the first ren these are the default commands
 # r = "r" # toggles return line carry feed \r
 # n = "n" # toggles newline \n
 # rl = "rl" # reloads the config
@@ -32,24 +33,32 @@ enabled = true
 # flush = "fl" # flushes all queued commands that where throtteled
 # flush = "flush" # flushes all queued commands that where throtteled
 # ren = "ren" # toggles \r \n and echo
+
+# you can do a list to execute multiple commands in a row
 # ren = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple
+# you can do <command> <arg> aswell
+# t5 = ["fl", "th 50"] clears the buffer and sets the throttle to 50 ms
 
 # you can provide a descriptions for any command builtin or custom
 # you get autocomplete suggestions in the popup
 # [command_descriptions]
 # "ren" = "toggles both newlines and echo"
 
-[keybindings]
-"ctrl+s" = "s"
-"ctrl+l" = "l"
-"ctrl+r" = "r"
-"ctrl+n" = "n"
-"ctrl+e" = "e"
-"ctrl+g" = "rl"
-"ctrl+p" = "p"
-"ctrl+h" = "c"
-"ctrl+f" = "fl"
-"ctrl+c" = "q"
+# [keybindings]
+# through ctrl+c these are the default keybindings:
+# "ctrl+s" = "s"
+# "ctrl+l" = "l"
+# "ctrl+r" = "r"
+# "ctrl+n" = "n"
+# "ctrl+e" = "e"
+# "ctrl+g" = "rl"
+# "ctrl+p" = "p"
+# "ctrl+h" = "c"
+# "ctrl+f" = "fl"
+# "ctrl+c" = "q"
+
+# you can bind a key to a command that takes arguments like this
+# "ctrl+t" = "th 50"
 
 [[devices]]
 name = "charachorder"

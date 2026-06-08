@@ -35,9 +35,15 @@ def _unescape_escapes(text: str) -> str:
         return text
 
 
+# probably not the greatest this is stored external to the command declaration
+GLOBAL_COMMANDS = ["rl", "reload", "q", "quit", "p", "pallett"]
+
+
 class SerialTui(App):
     CSS_PATH = "main_screen.scss"
 
+    # prevents default pallett binding
+    COMMAND_PALETTE_BINDING = ""
     BINDINGS = [
         Binding("ctrl+q", "do_nothing"),
         Binding("ctrl+c", "do_nothing"),
@@ -56,7 +62,7 @@ class SerialTui(App):
             Command(["ren"], r"toggle \r, \n and echo", self._cmd_toggle_ren),
             Command(["q", "quit"], r"terminates the program",
                     self._cmd_quit),
-            Command(["echo"], "toggle local echo", self._cmd_toggle_echo),
+            Command(["e", "echo"], "toggle local echo", self._cmd_toggle_echo),
             Command(["p", "pallett"], "shows command pallett",
                     self._cmd_pallett),
             Command(["togglec", "c"], "toggles device connection",
@@ -70,7 +76,7 @@ class SerialTui(App):
             Command(["clear", "l"], "clear output terminal", self._cmd_clear),
             Command(["th", "throttle"], "set or view throttle ms",
                     self._cmd_throttle),
-            Command(["flush"], "flush buffered commands", self._cmd_flush),
+            Command(["flush", "fl"], "flush buffered commands", self._cmd_flush),
         ]
 
         self._real_command_map: dict[str, Command] = {}
@@ -172,7 +178,7 @@ class SerialTui(App):
     def on_key(self, event):
         cmd_name = self._keybinding_map.get(event.key)
         if cmd_name is not None:
-            self._execute_real_commands(cmd_name, "")
+            self._screen_safe_execute_real_commands(cmd_name, "")
         event.stop()
 
     def _update_keybindings(self, config: dict) -> None:
@@ -343,9 +349,27 @@ class SerialTui(App):
         else:
             self._log_message("buffer empty")
 
+    def _screen_safe_execute_real_commands(self, commands: str | list[str], args: str) -> None:
+        """
+        executes the real commands when you are on the main screen
+        if you are off the main screen then only GLOBAL_COMMANDS can execute
+        """
+        if isinstance(commands, str):
+            commands = [commands]
+        if len(self.screen_stack) > 1:
+            for command in commands:
+                if command not in GLOBAL_COMMANDS:
+                    return
+        self._execute_real_commands(commands, args)
+
     def _execute_real_commands(self, commands: str | list[str], args: str) -> None:
         if isinstance(commands, str):
             commands = [commands]
+        if len(self.screen_stack) > 1:
+            for command in commands:
+                if command not in GLOBAL_COMMANDS:
+                    return
+
         for cmd_name in commands:
             cmd = self._real_command_map.get(cmd_name)
             if cmd is None:

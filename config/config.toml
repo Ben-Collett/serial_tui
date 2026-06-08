@@ -15,6 +15,7 @@ enabled = true
 # rl = "rl" # reloads the config
 # reload = "reload" # reloads the config
 # rn = "rn" # toggles both \r and \n
+# e = "e" # toggles echo
 # echo = "echo" # toggles echo
 # togglec = "togglec" # toggles device connection for selected device
 # c = "c" # toggles device connection for selected device
@@ -28,6 +29,7 @@ enabled = true
 # l = "l" # clears output
 # th = "th" # lets you set the throttle rate using th <ms>, Ex: th 100
 # throttle = "th" # same as th
+# flush = "fl" # flushes all queued commands that where throtteled
 # flush = "flush" # flushes all queued commands that where throtteled
 # ren = "ren" # toggles \r \n and echo
 # ren = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple
@@ -38,13 +40,16 @@ enabled = true
 # "ren" = "toggles both newlines and echo"
 
 [keybindings]
-"ctrl+s" = "select"
-"ctrl+l" = "clear"
+"ctrl+s" = "s"
+"ctrl+l" = "l"
 "ctrl+r" = "r"
 "ctrl+n" = "n"
-"ctrl+g" = "reload"
-"ctrl+c" = "quit"
-"ctrl+q" = "clear"
+"ctrl+e" = "e"
+"ctrl+g" = "rl"
+"ctrl+p" = "p"
+"ctrl+h" = "c"
+"ctrl+f" = "fl"
+"ctrl+c" = "q"
 
 [[devices]]
 name = "charachorder"

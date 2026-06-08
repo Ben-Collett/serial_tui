@@ -37,4 +37,16 @@ def get_devices_config(config: dict) -> list[dict]:
 
 
 def get_keybindings(config: dict) -> dict[str, str]:
-    return config.get("keybindings") or {}
+    DEFAULT_BINDINGS = {
+        "ctrl+s": "select",
+        "ctrl+l": "clear",
+        "ctrl+r": "r",
+        "ctrl+n": "n",
+        "ctrl+e": "echo",
+        "ctrl+g": "reload",
+        "ctrl+h": "c",
+        "ctrl+f": "flush",
+        "ctrl+p": "p",
+        "ctrl+c": "quit",
+    }
+    return safe_get(config, dict, DEFAULT_BINDINGS, "keybindings")

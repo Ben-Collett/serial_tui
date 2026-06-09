@@ -5,6 +5,7 @@ from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalGroup
 from textual.widgets import Button, Header, Input, Label, Switch, TextArea
 from completed_input import CompletedInput
+from my_footer import CustomFooter
 from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
@@ -85,6 +86,7 @@ class SerialTui(App):
         self._command_completion_suggestions: list[tuple[str, str]] = []
         self._keybinding_map: dict[str, str] = {}
         self._device_completion_suggestions: list[tuple[str, str]] = []
+        self._footer = CustomFooter(keybindings=[])
         for _cmd in self.REAL_COMMANDS:
             for _name in _cmd.names:
                 self._real_command_map[_name] = _cmd
@@ -137,6 +139,7 @@ class SerialTui(App):
         yield TopBar(id="topbar")
         yield TextArea(id="output", read_only=True)
         yield StatusBar(id="statusbar")
+        yield self._footer
 
     def on_mount(self) -> None:
         self.reload_config()
@@ -185,15 +188,34 @@ class SerialTui(App):
     def _update_keybindings(self, config: dict) -> None:
         self._keybinding_map.clear()
 
+        footer_bindings: list[tuple[str, str]] = []
         keybindings = get_keybindings(config)
         for keys, cmd_name in keybindings.items():
-            base_name = cmd_name.split(maxsplit=1)[0] if isinstance(cmd_name, str) else cmd_name
-            cmd = self._real_command_map.get(base_name)
-            if cmd is None:
-                self._log_message(
-                    f"keybinding '{keys}': command '{cmd_name}' not found")
-                continue
-            self._keybinding_map[keys] = cmd_name
+            if isinstance(cmd_name, list):
+                cmds = cmd_name
+                valid = True
+                for cmd in cmds:
+                    base_name = cmd.split(maxsplit=1)[0]
+                    if self._real_command_map.get(base_name) is None:
+                        self._log_message(
+                            f"keybinding '{keys}': command '{cmd}' not found")
+                        valid = False
+                        break
+                if not valid:
+                    continue
+                self._keybinding_map[keys] = cmds
+                footer_bindings.append((keys, "["+", ".join(cmd_name)+"]"))
+            else:
+                base_name = cmd_name.split(maxsplit=1)[0]
+                cmd = self._real_command_map.get(base_name)
+                if cmd is None:
+                    self._log_message(
+                        f"keybinding '{keys}': command '{cmd_name}' not found")
+                    continue
+                self._keybinding_map[keys] = cmd_name
+                footer_bindings.append((keys, cmd_name))
+
+        self._footer.update_bindings(footer_bindings)
 
     def reload_config(self):
         self.update_themes()

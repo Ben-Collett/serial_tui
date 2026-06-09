@@ -38,7 +38,7 @@ enabled = true
 # you can do a list to execute multiple commands in a row
 # ren = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple
 # you can do <command> <arg> aswell
-# t5 = ["fl", "th 50"] clears the buffer and sets the throttle to 50 ms
+# t5 = ["fl", "th 50"] # clears the buffer and sets the throttle to 50 ms
 
 # you can provide a descriptions for any command builtin or custom
 # you get autocomplete suggestions in the popup
@@ -61,6 +61,7 @@ enabled = true
 # you can bind a key to a command that takes arguments like this
 # "ctrl+t" = "th 50"
 # "ctrl+t" = "send CMD"
+# "ctrl+t" = ["fl", "th 50"]  # clears the buffer and sets the throttle to 50 ms
 
 [[devices]]
 name = "charachorder"

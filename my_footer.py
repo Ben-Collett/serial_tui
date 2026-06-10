@@ -19,6 +19,25 @@ class CustomFooter(Widget):
         use ellipse if overflow
     """
 
+    COMPONENT_CLASSES = {
+        "footer-key--key",
+        "footer-key--description",
+    }
+
+    DEFAULT_CSS = """
+    CustomFooter {
+        .footer-key--key {
+            color: $footer-key-foreground;
+            background: $footer-key-background;
+            text-style: bold;
+        }
+        .footer-key--description {
+            color: $footer-description-foreground;
+            background: $footer-description-background;
+        }
+    }
+    """
+
     def __init__(self, keybindings: list[tuple[str, str]] | None):
         super().__init__()
         self.keybindings: list[tuple[str, str]] = keybindings or []
@@ -29,37 +48,48 @@ class CustomFooter(Widget):
 
     def render(self) -> RenderResult:
         width = self.size.width
-        # height = self.size.height
-        lines = ""
+        key_text_style = self.get_component_rich_style("footer-key--key")
+        description_style = self.get_component_rich_style(
+            "footer-key--description")
+
+        rich_text = RichText("")
         current_width = 0
-        i: int = 0
+        i = 0
         while i < len(self.keybindings):
             key, cmd = self.keybindings[i]
-            needed_width = len(key)+len(cmd)+1  # +1 for a space
-            not_last_binding = i != len(self.keybindings)-1
+            padded_key = f"{key} "
+            needed_width = len(padded_key) + len(cmd) + 1
+            not_last_binding = i != len(self.keybindings) - 1
+
             if not_last_binding:
-                needed_width += 3  # an extra space between bindings
+                needed_width += 2  # "| ", the separator character and a space after it
+
             remaining_width = width - current_width
-            if remaining_width < needed_width:
-                lines += ELLIPS
-                break
-            # if where not the last binding
-            # and we cannot fit an ellipse after displaying
-            # then we should just display the elispe instead
-            if not_last_binding and remaining_width-needed_width < len(ELLIPS):
-                lines += ELLIPS
+            can_not_fit_on_current_row = remaining_width <= needed_width
+            if can_not_fit_on_current_row:
+                rich_text.append(ELLIPS)
                 break
 
-            lines += f"[b]{key}[/b] {cmd}"
+            no_space_for_ellips_if_rendered = remaining_width - \
+                needed_width < len(ELLIPS)
+
+            if not_last_binding and no_space_for_ellips_if_rendered:
+                rich_text.append(ELLIPS)
+                break
+
+            rich_text.append(padded_key, key_text_style)
+            rich_text.append(f"{cmd} ", description_style)
             if not_last_binding:
-                lines += " | "
+                rich_text.append("| ")
 
             current_width += needed_width
             i += 1
 
-        if lines == "":
-            lines = "no keybindings detected"
-        return lines
+        if not rich_text:
+            rich_text = RichText("no keybindings detected")
+
+        rich_text.stylize_before(self.rich_style)
+        return rich_text
 
 
 class CompletedInputApp(App):

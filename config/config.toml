@@ -6,6 +6,9 @@ header_visible = true
 footer_max_height = 2  # set to 0 to hide the footer, this is the max height if less rows can be used to display the bindings they will
 shorten_bindings = false  # substatues ctrl+ with ^
 
+[history]
+size = 100  # navigte the history by pressin the autoocmplete navigation keys (up, down, ctrl+j,ctrl+k) while the suggestions are not empty
+
 [autocomplete]
 enabled = true
 

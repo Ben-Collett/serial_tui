@@ -1,3 +1,5 @@
+from collections import deque
+
 from rich.text import Text as RichText
 from textual.app import App, ComposeResult
 from textual.events import Key
@@ -21,7 +23,7 @@ class CompletedInput(Input):
         the ability to define custom suggestions and assign weght to them
     """
 
-    def __init__(self, suggestions=None, max_suggestions=4, *args, **kwargs):
+    def __init__(self, suggestions=None, max_suggestions=4, history_size=100, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._max_suggestions = max_suggestions
         self._autocomplete_enabled = True
@@ -30,10 +32,72 @@ class CompletedInput(Input):
         self._list_view = _SuggestionList(self._on_suggestion_selected)
         self._shown = False
         self._user_navigated = False
+        self.history: deque = deque(maxlen=history_size)
+        self.history_index: int | None = None
+        self._suppress_suggestions = False
 
     def set_autocomplete_enabled(self, val: bool) -> None:
         if val ^ self._autocomplete_enabled:
             self._toggle_autocomplete()
+
+    def send(self, text: str) -> None:
+        if text:
+            self.history.append(text)
+        self.history_index = None
+        self.value = ""
+
+    def update_history_size(self, size: int) -> None:
+        new_history = deque(maxlen=size)
+        items = list(self.history)
+        if len(items) > size:
+            items = items[-size:]
+        for item in items:
+            new_history.append(item)
+        self.history = new_history
+        if self.history_index is not None and self.history_index >= size:
+            self.history_index = size - 1
+
+    def history_up(self) -> None:
+        if not self.history:
+            return
+
+        history_index = self.history_index
+        if history_index is None:
+            history_index = len(self.history) - 1
+        else:
+            history_index -= 1
+
+        if history_index < 0:
+            return
+
+        self.history_index = history_index
+
+        text = self.history[self.history_index]
+        self._suppress_suggestions = True
+        self.value = text
+        self.cursor_position = len(text)
+
+    def history_down(self) -> None:
+        if not self.history:
+            return
+        history_index = self.history_index
+        if history_index is None:
+            return
+        else:
+            history_index += 1
+
+        if history_index < 0:
+            return
+        if history_index >= len(self.history):
+            self.history_index = None
+            self.value = ""
+            return
+
+        self.history_index = history_index
+        text = self.history[self.history_index]
+        self._suppress_suggestions = True
+        self.value = text
+        self.cursor_position = len(text)
 
     def _toggle_autocomplete(self) -> None:
         self._autocomplete_enabled = not self._autocomplete_enabled
@@ -77,6 +141,10 @@ class CompletedInput(Input):
         self._list_view.styles.display = "none"
 
     def on_input_changed(self, event: Input.Changed) -> None:
+        if self._suppress_suggestions:
+            self._suppress_suggestions = False
+            return
+        self.history_index = None
         if not self._autocomplete_enabled:
             return
         has_suggestions = self._update_suggestions(event.value)
@@ -96,35 +164,43 @@ class CompletedInput(Input):
         self._hide_suggestions()
 
     def key_down(self, event: Key) -> bool:
-        if not self._shown:
-            return False
+        if self._shown:
+            event.stop()
+            self._user_navigated = True
+            self._highlight_next()
+            return True
+        self.history_down()
         event.stop()
-        self._user_navigated = True
-        self._highlight_next()
         return True
 
     def key_up(self, event: Key) -> bool:
-        if not self._shown:
-            return False
+        if self._shown:
+            event.stop()
+            self._user_navigated = True
+            self._highlight_prev()
+            return True
+        self.history_up()
         event.stop()
-        self._user_navigated = True
-        self._highlight_prev()
         return True
 
     def key_ctrl_k(self, event: Key) -> bool:
-        if not self._shown:
-            return False
+        if self._shown:
+            event.stop()
+            self._user_navigated = True
+            self._highlight_prev()
+            return True
+        self.history_up()
         event.stop()
-        self._user_navigated = True
-        self._highlight_prev()
         return True
 
     def key_ctrl_j(self, event: Key) -> bool:
-        if not self._shown:
-            return False
+        if self._shown:
+            event.stop()
+            self._user_navigated = True
+            self._highlight_next()
+            return True
+        self.history_down()
         event.stop()
-        self._user_navigated = True
-        self._highlight_next()
         return True
 
     def key_tab(self, event: Key) -> bool:

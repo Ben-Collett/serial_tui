@@ -48,6 +48,10 @@ def get_shorten_binding(config: dict) -> bool:
     return safe_get(config, bool, False, "ui", "shorten_binding")
 
 
+def get_history_size(config: dict) -> int:
+    return safe_get(config, int, 100, "history", "size")
+
+
 def get_keybindings(config: dict) -> dict[str, str]:
     DEFAULT_BINDINGS = {
         "ctrl+s": "select_device",

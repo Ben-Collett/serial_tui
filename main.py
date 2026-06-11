@@ -12,11 +12,11 @@ from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
 from config import (get_auto_complete_enabled, get_command_descriptions_override,
                     get_commands_override, get_devices_config, get_header_visible,
-                    get_footer_max_height, get_keybindings, get_shorten_binding, get_theme)
+                    get_footer_max_height, get_history_size, get_keybindings,
+                    get_shorten_binding, get_theme)
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
 from recommended_settings_resolver import RecommendedSettingsResolver
-from debug_utils import logger
 
 
 @dataclass
@@ -220,7 +220,8 @@ class SerialTui(App):
                 footer_bindings.append((keys, cmd_name))
 
         if get_shorten_binding(config):
-            footer_bindings = [(k.replace("ctrl+", "^"), v) for k, v in footer_bindings]
+            footer_bindings = [(k.replace("ctrl+", "^"), v)
+                               for k, v in footer_bindings]
 
         self._footer.update_bindings(footer_bindings)
 
@@ -259,6 +260,10 @@ class SerialTui(App):
 
         footer_max_height = get_footer_max_height(config)
         self._footer.styles.max_height = footer_max_height
+
+        history_size = get_history_size(config)
+        self.query_one("#input", CompletedInput).update_history_size(
+            history_size)
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):
@@ -464,21 +469,21 @@ class SerialTui(App):
         self.notify_error(unknown_command(f"!{name}"))
 
     def _send_data(self) -> None:
-        inp = self.query_one("#input", Input)
+        inp = self.query_one("#input", CompletedInput)
         text = inp.value
         if not text:
             return
 
+        inp.send(text)
+
         if text.startswith("!!"):
             text = text[1:]
         elif text.startswith("!"):
-            inp.value = ""
             self._handle_user_command(text)
             return
 
         if not self._connected:
             self._log_message("no device connected")
-            inp.value = ""
             return
 
         text = _unescape_escapes(text)
@@ -504,7 +509,6 @@ class SerialTui(App):
             return
         if echo:
             self._append_data(data)
-        inp.value = ""
 
     def _toggle_connect(self) -> None:
         if not self._connected:

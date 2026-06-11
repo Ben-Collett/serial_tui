@@ -1,7 +1,10 @@
-[appearance]
+[ui]
 theme = "textual-dark"
 # theme = "full_documented_theme"
 # theme = "tokyo-night"
+header_visible = true
+footer_max_height = 2  # set to 0 to hide the footer, this is the max height if less rows can be used to display the bindings they will
+shorten_bindings = false  # substatues ctrl+ with ^
 
 [autocomplete]
 enabled = true
@@ -14,25 +17,28 @@ enabled = true
 # send = "send" # simply sends whatever comes after it
 # r = "r" # toggles return line carry feed \r
 # n = "n" # toggles newline \n
-# rl = "rl" # reloads the config
+# reload_config = "reload_config" # reloads the config
 # reload = "reload" # reloads the config
+# rl = "rl" # reloads the config
 # rn = "rn" # toggles both \r and \n
 # e = "e" # toggles echo
 # echo = "echo" # toggles echo
-# togglec = "togglec" # toggles device connection for selected device
+# toggle_connection = "toggle_connection" # toggles device connection for selected device
 # c = "c" # toggles device connection for selected device
 # con = "con" # connects to selected device disconnects and reconnects if already connected
 # connect = "connect" # connects to selected device disconnects and reconnects if already connected
 # dis = "dis" # disconnects from selected device does nothing if already disconnected
 # disconnect = "disconnect" # disconnects from selected device does nothing if already disconnected
-# s = "s" # opens device selection screen
+# select_device = "select_device" # opens device selection screen
 # select = "select" # opens device selection screen
+# s = "s" # opens device selection screen
 # clear = "clear" # clears output
 # l = "l" # clears output
 # th = "th" # lets you set the throttle rate using th <ms>, Ex: th 100
 # throttle = "th" # same as th
-# flush = "fl" # flushes all queued commands that where throtteled
-# flush = "flush" # flushes all queued commands that where throtteled
+# flush = "flush_buf" # flushes all queued things to be sent that where throtteled
+# flush = "flush" # flushes all queued things to be sent that where throtteled
+# flush = "fl" # flushes all queued things to be sent that where throtteled
 # ren = "ren" # toggles \r \n and echo
 
 # you can do a list to execute multiple commands in a row
@@ -47,16 +53,16 @@ enabled = true
 
 # [keybindings]
 # through ctrl+c these are the default keybindings:
-# "ctrl+s" = "s"
-# "ctrl+l" = "l"
+# "ctrl+s" = "select_device"
+# "ctrl+l" = "clear"
 # "ctrl+r" = "r"
 # "ctrl+n" = "n"
-# "ctrl+e" = "e"
-# "ctrl+g" = "rl"
-# "ctrl+p" = "p"
-# "ctrl+h" = "c"
-# "ctrl+f" = "fl"
-# "ctrl+c" = "q"
+# "ctrl+e" = "echo"
+# "ctrl+g" = "reload_config"
+# "ctrl+p" = "command_pallett"
+# "ctrl+h" = "toggle_connection"
+# "ctrl+f" = "flush_buf"
+# "ctrl+c" = "quit"
 
 # you can bind a key to a command that takes arguments like this
 # "ctrl+t" = "th 50"

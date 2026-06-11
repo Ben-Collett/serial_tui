@@ -59,7 +59,7 @@ Screen {
 }
 
 CustomFooter {
-  height: 1;
+  height: auto;
   dock: bottom;
   background: $panel;
   color: $text;

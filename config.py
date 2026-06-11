@@ -15,7 +15,7 @@ def safe_get(config: dict,  typ: Type, default, *keys):
 
 
 def get_theme(config: dict) -> str:
-    return safe_get(config, str, DEFAULT_THEME, "appearance", "theme")
+    return safe_get(config, str, DEFAULT_THEME, "ui", "theme")
 
 
 def get_auto_complete_enabled(config: dict):
@@ -36,17 +36,29 @@ def get_devices_config(config: dict) -> list[dict]:
     return config.get("devices") or []
 
 
+def get_header_visible(config: dict) -> bool:
+    return safe_get(config, bool, True, "ui", "header_visible")
+
+
+def get_footer_max_height(config: dict) -> int | None:
+    return safe_get(config, int, 2, "ui", "footer_max_height")
+
+
+def get_shorten_binding(config: dict) -> bool:
+    return safe_get(config, bool, False, "ui", "shorten_binding")
+
+
 def get_keybindings(config: dict) -> dict[str, str]:
     DEFAULT_BINDINGS = {
-        "ctrl+s": "select",
+        "ctrl+s": "select_device",
         "ctrl+l": "clear",
         "ctrl+r": "r",
         "ctrl+n": "n",
         "ctrl+e": "echo",
-        "ctrl+g": "reload",
-        "ctrl+h": "c",
-        "ctrl+f": "flush",
-        "ctrl+p": "p",
+        "ctrl+g": "reload_config",
+        "ctrl+h": "toggle_connection",
+        "ctrl+f": "flush_buf",
+        "ctrl+p": "command_pallett",
         "ctrl+c": "quit",
     }
     return safe_get(config, dict, DEFAULT_BINDINGS, "keybindings")

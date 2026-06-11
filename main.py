@@ -11,7 +11,8 @@ from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
 from config import (get_auto_complete_enabled, get_command_descriptions_override,
-                    get_commands_override, get_devices_config, get_keybindings, get_theme)
+                    get_commands_override, get_devices_config, get_header_visible,
+                    get_footer_max_height, get_keybindings, get_shorten_binding, get_theme)
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
 from recommended_settings_resolver import RecommendedSettingsResolver
@@ -37,7 +38,8 @@ def _unescape_escapes(text: str) -> str:
 
 
 # probably not the greatest this is stored external to the command declaration
-GLOBAL_COMMANDS = ["rl", "reload", "q", "quit", "p", "pallett"]
+GLOBAL_COMMANDS = ["rl", "reload", "reload_config", "q",
+                   "quit", "p", "pallett", "command_pallett"]
 
 
 class SerialTui(App):
@@ -58,26 +60,28 @@ class SerialTui(App):
         self.REAL_COMMANDS: list[Command] = [
             Command(["r"], r"toggle \r newline", self._cmd_toggle_r),
             Command(["n"], r"toggle \n newline", self._cmd_toggle_n),
-            Command(["rl", "reload"], r"reloads the config", self._cmd_reload),
+            Command(["rl", "reload", "reload_config"],
+                    r"reloads the config", self._cmd_reload),
             Command(["rn"], r"toggle both \r and \n", self._cmd_toggle_rn),
             Command(["ren"], r"toggle \r, \n and echo", self._cmd_toggle_ren),
             Command(["q", "quit"], r"terminates the program",
                     self._cmd_quit),
             Command(["e", "echo"], "toggle local echo", self._cmd_toggle_echo),
-            Command(["p", "pallett"], "shows command pallett",
+            Command(["p", "pallett", "command_pallett"], "shows command pallett",
                     self._cmd_pallett),
-            Command(["togglec", "c"], "toggles device connection",
+            Command(["toggle_connection", "c"], "toggles device connection",
                     self._cmd_toggle_connection),
             Command(["con", "connect"],
                     "connect to device", self._cmd_connect),
             Command(["dis", "disconnect"],
                     "disconnect from device", self._cmd_disconnect),
-            Command(["s", "select"], "open device selection",
+            Command(["s", "select", "select_device"], "open device selection",
                     self._cmd_prompt_select_device),
             Command(["clear", "l"], "clear output terminal", self._cmd_clear),
             Command(["th", "throttle"], "set or view throttle ms",
                     self._cmd_throttle),
-            Command(["flush", "fl"], "flush buffered commands", self._cmd_flush),
+            Command(["flush", "fl", "flush_buf"],
+                    "flush buffered commands", self._cmd_flush),
             Command(["send"], "send data to device", self._cmd_send),
         ]
 
@@ -215,6 +219,9 @@ class SerialTui(App):
                 self._keybinding_map[keys] = cmd_name
                 footer_bindings.append((keys, cmd_name))
 
+        if get_shorten_binding(config):
+            footer_bindings = [(k.replace("ctrl+", "^"), v) for k, v in footer_bindings]
+
         self._footer.update_bindings(footer_bindings)
 
     def reload_config(self):
@@ -246,6 +253,12 @@ class SerialTui(App):
             self._update_input_suggestions()
 
         self._update_keybindings(config)
+
+        header_visible = get_header_visible(config)
+        self.query_one(Header).display = "block" if header_visible else "none"
+
+        footer_max_height = get_footer_max_height(config)
+        self._footer.styles.max_height = footer_max_height
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):

@@ -52,7 +52,8 @@ def get_history_size(config: dict) -> int:
     return safe_get(config, int, 100, "history", "size")
 
 
-def get_keybindings(config: dict) -> dict[str, str]:
+# TODO: force  to be dict[str,str|list[str]]
+def get_keybindings(config: dict) -> dict:
     DEFAULT_BINDINGS = {
         "ctrl+s": "select_device",
         "ctrl+l": "clear",

@@ -1,10 +1,12 @@
 import codecs
 from collections.abc import Callable
 from dataclasses import dataclass
-from textual.app import App, ComposeResult, Binding
+from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import HorizontalGroup, VerticalGroup
 from textual.widgets import Button, Header, Input, Label, Switch, TextArea
 from completed_input import CompletedInput
+from device import Device
 from my_footer import CustomFooter
 from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
@@ -82,13 +84,19 @@ class SerialTui(App):
                     self._cmd_throttle),
             Command(["flush", "fl", "flush_buf"],
                     "flush buffered commands", self._cmd_flush),
+            Command(["cmds"], "prints out all available commands to the output section",
+                    self._cmd_print_cmds),
+            Command(
+                ["keys"], "prints all keybindings to the output section", self._cmd_print_keys),
+            Command(
+                ["device_info"], "prints selected device info to the output section", self._cmd_print_device),
             Command(["send"], "send data to device", self._cmd_send),
         ]
 
         self._real_command_map: dict[str, Command] = {}
         self._user_command_map: dict[str, str | list[str]] = {}
         self._command_completion_suggestions: list[tuple[str, str]] = []
-        self._keybinding_map: dict[str, str] = {}
+        self._keybinding_map: dict[str, str | list[str]] = {}
         self._device_completion_suggestions: list[tuple[str, str]] = []
         self._footer = CustomFooter(keybindings=[])
         for _cmd in self.REAL_COMMANDS:
@@ -135,6 +143,25 @@ class SerialTui(App):
     def _cmd_pallett(self, *_):
         self.action_command_palette()
 
+    def _cmd_print_keys(self, *_):
+        self._print_keys()
+
+    def _cmd_print_cmds(self, *_):
+        self._print_cmds()
+
+    def _cmd_print_device(self, *_):
+        device = manager.selected_device
+        self._print_device_info(device)
+
+    def _get_user_command_description(self, cmd: str) -> str | None:
+        real_cmd = self._real_command_map.get(cmd)
+        if real_cmd is None:
+            self.notify_error(f"failed to get real command for {cmd}")
+            out = None
+        else:
+            out = real_cmd.description
+        return out
+
     def notify_error(self, message: str) -> None:
         self.notify(message, severity="error", timeout=5)
 
@@ -177,11 +204,79 @@ class SerialTui(App):
         self.query_one("#input", CompletedInput).update_suggestions(
             suggestions)
 
+    def _get_real_command_description(self, cmd: str) -> str | None:
+        command = self._real_command_map.get(cmd)
+        if command is None:
+            self.notify_error(
+                "couldn't get real command in _get_real_command_description")
+            return None
+        return command.description
+
     def action_do_nothing(self, *_):
         """
         used to override default behavior of ctrl+c and ctrl+q
         """
         pass
+
+    def _print_cmds(self):
+        lines = []
+        for name, cmd in self._user_command_map.items():
+            if isinstance(cmd, str):
+                description = self._get_user_command_description(
+                    cmd)
+                if description is None:
+                    description = str(cmd)
+
+            else:
+                description = str(cmd)
+            lines.append(f"!{name} -> {description}")
+        lines.append("")
+        lines.append("")
+        self._append_data("\n".join(lines))
+
+    def _print_device_info(self, device: Device | None):
+        auto_complete = self._device_completion_suggestions
+        if device is None:
+            self._log_message("no selected device to print info of")
+            return
+        lines = []
+        lines.append(f"name: {device.name}")
+        lines.append(f"description: {device.description}")
+        if len(auto_complete) > 1:
+            lines.append("")  # extra new line
+            lines.append("auto complete suggestions:")  # extra new line
+            for key, description in self._device_completion_suggestions:
+                lines.append(f"{key} -> {description}")
+        lines.append("")  # extra new line
+        self._append_data("\n".join(lines))
+
+    def _print_keys(self):
+        """
+        prints the keybindings and there commands description to the output section
+        if there is multiple commands then just print them 
+        example:
+            ctrl+p -> open command pallett
+            ctrl+t -> fl, th 50
+        """
+        lines = []
+        for key, val in self._keybinding_map.items():
+            description = ""
+            if isinstance(val, str):
+                description = self._get_real_command_description(val)
+            elif isinstance(val, list):
+                description = ", ".join(val)
+            else:
+                self.notify_error("unexpected keybinding command type")
+                description = "unknown"
+            lines.append(f"{key} -> {description}")
+
+        if len(lines) == 0:
+            lines.append("no set keybindings")
+        else:
+            lines.append("")
+        lines.append("")
+
+        self._append_data("\n".join(lines))
 
     def on_key(self, event):
         cmd_name = self._keybinding_map.get(event.key)
@@ -284,6 +379,10 @@ class SerialTui(App):
     def _on_connected(self) -> None:
         self._connected = True
         dev = manager.selected_device
+        if dev is None:
+            self.notify_error(
+                "Some how the device was none _on_connected. That shouldn't happen. \nCongratulations, you have discovered a bug.\n Let us know on the issue tracker especially if you found a away to reproduce the bug.")
+            return
         self.query_one("#data", Label).update(
             f"baud-rate:{manager.baudrate}\r\nport:{dev.port}\r\ndevice:{dev.name}"
         )
@@ -349,11 +448,10 @@ class SerialTui(App):
                 self._device_completion_suggestions = rs.auto_complete_suggestions
             else:
                 self._device_completion_suggestions = []
-        self._update_device_display()
+        self._update_device_display(manager.selected_device)
         self._update_input_suggestions()
 
-    def _update_device_display(self):
-        dev = manager.selected_device
+    def _update_device_display(self, dev: Device):
         self.query_one("#data", Label).update(
             f"baud-rate:{manager.baudrate}\r\nport:{dev.port}\r\ndevice:{dev.name}"
         )

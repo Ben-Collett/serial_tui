@@ -43,6 +43,9 @@ enabled = true
 # flush = "flush" # flushes all queued things to be sent that where throtteled
 # flush = "fl" # flushes all queued things to be sent that where throtteled
 # ren = "ren" # toggles \r \n and echo
+# device_info = "device_info" # prints the info for the current device
+# cmds = "cmds" # prints out all  commands available to the user to the output section
+# keys = "keys" # prints out all commands available to the user to the output section
 
 # you can do a list to execute multiple commands in a row
 # ren = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple

@@ -11,6 +11,8 @@ size = 100  # navigte the history by pressin the autoocmplete navigation keys (u
 
 [autocomplete]
 enabled = true
+suggestion_overlay_max_width = 40  # max width of the suggestion dropdown in characters
+suggestion_overlay_max_height = 9  # max height of the suggestion dropdown in items
 
 # if you put commands section with out any commands then there will be no commands
 # if you want to use custom commands and the original commands then you need to

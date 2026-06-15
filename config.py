@@ -22,6 +22,14 @@ def get_auto_complete_enabled(config: dict):
     return safe_get(config, bool, True, "autocomplete", "enabled")
 
 
+def get_suggestion_overlay_max_width(config: dict) -> int:
+    return safe_get(config, int, 40, "autocomplete", "suggestion_overlay_max_width")
+
+
+def get_suggestion_overlay_max_height(config: dict) -> int:
+    return safe_get(config, int, 9, "autocomplete", "suggestion_overlay_max_height")
+
+
 def get_commands_override(config: dict) -> dict[str, str | list[str]] | None:
     # TODO enforce typing
     return config.get("commands")

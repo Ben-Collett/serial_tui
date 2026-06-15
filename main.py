@@ -15,7 +15,8 @@ from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, Buff
 from config import (get_auto_complete_enabled, get_command_descriptions_override,
                     get_commands_override, get_devices_config, get_header_visible,
                     get_footer_max_height, get_history_size, get_keybindings,
-                    get_shorten_binding, get_theme)
+                    get_shorten_binding, get_suggestion_overlay_max_height,
+                    get_suggestion_overlay_max_width, get_theme)
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
 from recommended_settings_resolver import RecommendedSettingsResolver
@@ -362,6 +363,11 @@ class SerialTui(App):
         history_size = get_history_size(config)
         self.query_one("#input", CompletedInput).update_history_size(
             history_size)
+
+        overlay_max_width = get_suggestion_overlay_max_width(config)
+        overlay_max_height = get_suggestion_overlay_max_height(config)
+        self.query_one("#input", CompletedInput).update_suggestion_overlay_size(
+            overlay_max_width, overlay_max_height)
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):

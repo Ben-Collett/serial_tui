@@ -2,7 +2,7 @@ from collections import deque
 
 from rich.text import Text as RichText
 from textual.app import App, ComposeResult
-from textual.events import Key
+from textual.events import Key, Resize
 from textual.widgets import Input, ListView, ListItem,  Static
 
 
@@ -23,9 +23,10 @@ class CompletedInput(Input):
         the ability to define custom suggestions and assign weght to them
     """
 
-    def __init__(self, suggestions=None, max_suggestions=4, history_size=100, *args, **kwargs):
+    def __init__(self, suggestions=None, max_height=6, max_width=40, history_size=100, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._max_suggestions = max_suggestions
+        self._max_suggestions = max_height
+        self._max_width = max_width
         self._autocomplete_enabled = True
         self._set_suggestion_data(suggestions)
         self._current_filtered = []
@@ -35,6 +36,14 @@ class CompletedInput(Input):
         self.history: deque = deque(maxlen=history_size)
         self.history_index: int | None = None
         self._suppress_suggestions = False
+
+    def update_suggestion_overlay_size(self, max_width: int, max_height: int) -> None:
+        self._max_width = max_width
+        self._max_suggestions = max_height
+        self._list_view.styles.width = max_width
+        self._list_view.styles.max_height = max_height
+        if self._shown:
+            self._position_list()
 
     def set_autocomplete_enabled(self, val: bool) -> None:
         if val ^ self._autocomplete_enabled:
@@ -135,7 +144,7 @@ class CompletedInput(Input):
         self.screen.mount(self._list_view)
         self._list_view.styles.position = "absolute"
         self._list_view.styles.layer = "overlay"
-        self._list_view.styles.width = 30
+        self._list_view.styles.width = self._max_width
         self._list_view.styles.height = "auto"
         self._list_view.styles.max_height = self._max_suggestions
         self._list_view.styles.display = "none"
@@ -288,11 +297,19 @@ class CompletedInput(Input):
         self._position_list()
         self._list_view.styles.display = "block"
 
+    def on_resize(self, event: Resize) -> None:
+        if self._shown:
+            self._position_list()
+
     def _position_list(self) -> None:
         cx, cy = self.cursor_screen_offset
         x = max(0, cx - 1)
         y = cy + 1
         self._list_view.styles.offset = (x, y)
+        remaining = self.screen.size.width - x
+        self._list_view.styles.width = min(self._max_width, remaining)
+        remaining_height = self.screen.size.height - y
+        self._list_view.styles.max_height = min(self._max_suggestions, remaining_height)
 
     def _hide_suggestions(self) -> None:
         if not self._shown:

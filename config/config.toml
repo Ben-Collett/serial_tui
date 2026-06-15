@@ -44,13 +44,14 @@ enabled = true
 # flush = "fl" # flushes all queued things to be sent that where throtteled
 # ren = "ren" # toggles \r \n and echo
 # device_info = "device_info" # prints the info for the current device
-# cmds = "cmds" # prints out all  commands available to the user to the output section
+# cmds = "cmds"  # prints out all  commands available to the user to the output section
 # keys = "keys" # prints out all commands available to the user to the output section
 
 # you can do a list to execute multiple commands in a row
 # ren = ["rn", "echo"] # ren is a built in command but this is how you can make a command call multiple
 # you can do <command> <arg> aswell
-# t5 = ["fl", "th 50"] # clears the buffer and sets the throttle to 50 ms
+# t5 = ["fl", "th 50"]  # clears the buffer and sets the throttle to 50 ms
+# t5 = "th 50"  # sets the throttle to 50 ms
 
 # you can provide a descriptions for any command builtin or custom
 # you get autocomplete suggestions in the popup

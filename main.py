@@ -156,8 +156,7 @@ class SerialTui(App):
     def _get_user_command_description(self, cmd: str) -> str | None:
         real_cmd = self._real_command_map.get(cmd)
         if real_cmd is None:
-            self.notify_error(f"failed to get real command for {cmd}")
-            out = None
+            out = cmd  # cases like throttle 50 being a command
         else:
             out = real_cmd.description
         return out
@@ -204,12 +203,16 @@ class SerialTui(App):
         self.query_one("#input", CompletedInput).update_suggestions(
             suggestions)
 
-    def _get_real_command_description(self, cmd: str) -> str | None:
+    def _get_real_command_description(self, cmd: str) -> str:
+        """
+        takes a command and returns it's description
+        from the command map
+        if it is not in the command map it will return the original string
+        this is to easily handle cases like 'th 50'
+        """
         command = self._real_command_map.get(cmd)
         if command is None:
-            self.notify_error(
-                "couldn't get real command in _get_real_command_description")
-            return None
+            return cmd  # cases like th 50
         return command.description
 
     def action_do_nothing(self, *_):
@@ -267,7 +270,7 @@ class SerialTui(App):
                 description = ", ".join(val)
             else:
                 self.notify_error("unexpected keybinding command type")
-                description = "unknown"
+                description = str(val)
             lines.append(f"{key} -> {description}")
 
         if len(lines) == 0:
@@ -374,7 +377,10 @@ class SerialTui(App):
 
     def _append_data(self, msg: str) -> None:
         ta = self.query_one("#output", TextArea)
+        at_bottom = ta.scroll_y >= ta.max_scroll_y
         ta.insert(msg, location=ta.document.end)
+        if at_bottom:
+            ta.scroll_end(animate=False)
 
     def _on_connected(self) -> None:
         self._connected = True

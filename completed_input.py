@@ -240,6 +240,17 @@ class CompletedInput(Input):
         self._hide_suggestions()
         return True
 
+    def key_backspace(self, event: Key):
+        """
+        this is a hack to get around how textual handles
+        inputs currently if the user types backpace without
+        it will create a race condition when using
+        highspeed devices like charchorder or my fuzzy chips program
+        I am going to try to get a fix upstreamed.
+        """
+        self.action_delete_left()
+        event.stop()
+
     def _get_filtered(self, value: str) -> list[tuple[str, str | None]]:
         lower_val = value.lower()
         matching = [
@@ -309,7 +320,8 @@ class CompletedInput(Input):
         remaining = self.screen.size.width - x
         self._list_view.styles.width = min(self._max_width, remaining)
         remaining_height = self.screen.size.height - y
-        self._list_view.styles.max_height = min(self._max_suggestions, remaining_height)
+        self._list_view.styles.max_height = min(
+            self._max_suggestions, remaining_height)
 
     def _hide_suggestions(self) -> None:
         if not self._shown:

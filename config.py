@@ -56,6 +56,14 @@ def get_shorten_binding(config: dict) -> bool:
     return safe_get(config, bool, False, "ui", "shorten_binding")
 
 
+def get_auto_scroll_mode(config: dict) -> str:
+    return safe_get(config, str, "bottom", "ui", "auto_scroll")
+
+
+def get_animate_auto_scroll(config: dict) -> bool:
+    return safe_get(config, bool, False, "ui", "animate_auto_scroll")
+
+
 def get_history_size(config: dict) -> int:
     return safe_get(config, int, 100, "history", "size")
 

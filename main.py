@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import HorizontalGroup, VerticalGroup
-from textual.widgets import Button, Header, Input, Label, Switch, TextArea
+from textual.widgets import Button, Header, Input, Label, Switch
+from custom_log import AutoScrollMode, CustomLog
 from completed_input import CompletedInput
 from device import Device
 from my_footer import CustomFooter
@@ -12,10 +13,12 @@ from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
-from config import (get_auto_complete_enabled, get_command_descriptions_override,
-                    get_commands_override, get_devices_config, get_header_visible,
-                    get_footer_max_height, get_history_size, get_keybindings,
-                    get_shorten_binding, get_suggestion_overlay_max_height,
+from config import (get_animate_auto_scroll, get_auto_complete_enabled,
+                    get_auto_scroll_mode, get_command_descriptions_override,
+                    get_commands_override, get_devices_config,
+                    get_header_visible, get_footer_max_height, get_history_size,
+                    get_keybindings, get_shorten_binding,
+                    get_suggestion_overlay_max_height,
                     get_suggestion_overlay_max_width, get_theme)
 from config_utils import load_config, get_themes_dir, theme_from_file
 from constants import DEFAULT_THEME
@@ -168,7 +171,7 @@ class SerialTui(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield TopBar(id="topbar")
-        yield TextArea(id="output", read_only=True)
+        yield CustomLog(id="output")
         yield StatusBar(id="statusbar")
         yield self._footer
 
@@ -369,6 +372,18 @@ class SerialTui(App):
         self.query_one("#input", CompletedInput).update_suggestion_overlay_size(
             overlay_max_width, overlay_max_height)
 
+        auto_scroll_str = get_auto_scroll_mode(config)
+        try:
+            auto_scroll_mode = AutoScrollMode[auto_scroll_str]
+        except KeyError:
+            self.notify_error(
+                f"Invalid auto_scroll value '{auto_scroll_str}', using 'bottom'")
+            auto_scroll_mode = AutoScrollMode.bottom
+        self.query_one("#output", CustomLog).auto_scroll = auto_scroll_mode
+
+        animate_auto_scroll = get_animate_auto_scroll(config)
+        self.query_one("#output", CustomLog).animate_auto_scroll = animate_auto_scroll
+
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):
             self.call_from_thread(self._append_data, event.msg)
@@ -382,11 +397,8 @@ class SerialTui(App):
             self.call_from_thread(self._update_buffer_display)
 
     def _append_data(self, msg: str) -> None:
-        ta = self.query_one("#output", TextArea)
-        at_bottom = ta.scroll_y >= ta.max_scroll_y
-        ta.insert(msg, location=ta.document.end)
-        if at_bottom:
-            ta.scroll_end(animate=False)
+        rl = self.query_one("#output", CustomLog)
+        rl.write(msg)
 
     def _on_connected(self) -> None:
         self._connected = True
@@ -476,7 +488,7 @@ class SerialTui(App):
                 break
 
     def _cmd_clear(self, *_) -> None:
-        self.query_one("#output", TextArea).text = ""
+        self.query_one("#output", CustomLog).clear_content()
 
     def _cmd_throttle(self, args: str) -> None:
         if args:

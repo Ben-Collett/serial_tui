@@ -57,6 +57,11 @@ class CustomTextArea(TextArea):
         if previous_selection != selection:
             self.post_message(self.SelectionChanged(selection, self))
 
+    def _watch_show_vertical_scrollbar(self) -> None:
+        # needed for the first auto scroll to be animated for some reason
+        if self.wrap_width:
+            self._rewrap_and_refresh_virtual_size()
+
     def append_text(self, text: str) -> None:
         """Append text to the end of the document.
 
@@ -80,15 +85,12 @@ class CustomTextArea(TextArea):
 
         if should_scroll:
             if self.auto_scroll_duration > 0:
-                self.animate("scroll_y", self.max_scroll_y,
-                             duration=float(self.auto_scroll_duration))
+                duration = float(self.auto_scroll_duration)
             else:
-                self.scroll_y = self.max_scroll_y
-            # if this line is remoeved
-            # when the user manually scroll's after autoscoling
-            # the users scroll position will jump to where it was
-            # when the autoscrolling started
-            self.scroll_target_y = self.max_scroll_y
+                duration = None
+            animate = duration is not None
+            self.scroll_end(animate=animate,
+                            duration=duration, easing="in_out_cubic", immediate=not animate)
         elif self.scroll_y != scroll_y:
             self.scroll_y = scroll_y
 

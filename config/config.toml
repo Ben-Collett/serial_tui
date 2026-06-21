@@ -12,8 +12,10 @@ shorten_bindings = false  # substatues ctrl+ with ^
 # always -> always autoscrolls to the bottom
 # bottom -> only autoscrolls to the bottom when adding new text to the output if you were already at the bottom this is the default behaviour
 auto_scroll = "bottom"
-# TODO: not supported yet:
-# animate_auto_scroll = false  # animate the auto-scroll, smoothes out the scrolling
+# how long the auto_scroll animation should last in seconds
+# takes a decimal value, I would recommend 0.3 if you use this feature
+# 0 is the default 0 or less disables the animation
+auto_scroll_duration_s = 0.3
 
 [history]
 size = 100  # navigte the history by pressin the autoocmplete navigation keys (up, down, ctrl+j,ctrl+k) while the suggestions are not empty

@@ -19,11 +19,11 @@ class CustomTextArea(TextArea):
     for use as a scrollable text display with proper line wrapping.
     """
 
-    auto_scroll: Reactive[AutoScrollMode] = reactive(AutoScrollMode.bottom)
     """Auto-scroll mode controlling behavior when text is appended."""
+    auto_scroll: Reactive[AutoScrollMode] = reactive(AutoScrollMode.bottom)
 
-    animate_auto_scroll: Reactive[bool] = reactive(False)
-    """Whether to animate the auto-scroll transition."""
+    """control's duration of autoscrolling animation"""
+    auto_scroll_duration: Reactive[float] = reactive(0)
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs.setdefault("read_only", True)
@@ -79,11 +79,16 @@ class CustomTextArea(TextArea):
         )
 
         if should_scroll:
-            if self.animate_auto_scroll:
-                self.animate("scroll_y", self.max_scroll_y, duration=0.3)
+            if self.auto_scroll_duration > 0:
+                self.animate("scroll_y", self.max_scroll_y,
+                             duration=float(self.auto_scroll_duration))
             else:
                 self.scroll_y = self.max_scroll_y
-                self.scroll_target_y = self.max_scroll_y
+            # if this line is remoeved
+            # when the user manually scroll's after autoscoling
+            # the users scroll position will jump to where it was
+            # when the autoscrolling started
+            self.scroll_target_y = self.max_scroll_y
         elif self.scroll_y != scroll_y:
             self.scroll_y = scroll_y
 

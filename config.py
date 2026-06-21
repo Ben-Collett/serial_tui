@@ -60,8 +60,24 @@ def get_auto_scroll_mode(config: dict) -> str:
     return safe_get(config, str, "bottom", "ui", "auto_scroll")
 
 
-def get_animate_auto_scroll(config: dict) -> bool:
-    return safe_get(config, bool, False, "ui", "animate_auto_scroll")
+def get_auto_scroll_duration(config: dict) -> float:
+    out = 0.0
+    ui = config.get("ui")
+    if not isinstance(ui, dict):
+        return out
+
+    duration = ui.get("auto_scroll_duration_s")
+    if isinstance(duration, float):
+        return duration
+    if isinstance(duration, int):
+        return float(duration)
+    if isinstance(duration, str):
+        try:
+            out = float(duration)
+        except BaseException:
+            pass
+
+    return out
 
 
 def get_history_size(config: dict) -> int:

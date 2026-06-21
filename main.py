@@ -13,7 +13,7 @@ from strings import not_reigistered_theme, unknown_command
 from popups import SelectDeviceData, SelectDeviceScreen
 from my_manager import manager
 from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
-from config import (get_animate_auto_scroll, get_auto_complete_enabled,
+from config import (get_auto_scroll_duration, get_auto_complete_enabled,
                     get_auto_scroll_mode, get_command_descriptions_override,
                     get_commands_override, get_devices_config,
                     get_header_visible, get_footer_max_height, get_history_size,
@@ -381,8 +381,9 @@ class SerialTui(App):
             auto_scroll_mode = AutoScrollMode.bottom
         self.query_one("#output", CustomLog).auto_scroll = auto_scroll_mode
 
-        animate_auto_scroll = get_animate_auto_scroll(config)
-        self.query_one("#output", CustomLog).animate_auto_scroll = animate_auto_scroll
+        auto_scroll_duration = get_auto_scroll_duration(config)
+        self.query_one(
+            "#output", CustomLog).auto_scroll_duration = auto_scroll_duration
 
     def _handle_event(self, event: SerialEvent) -> None:
         if isinstance(event, DataEvent):

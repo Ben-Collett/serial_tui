@@ -680,6 +680,7 @@ class StatusBar(HorizontalGroup):
         )
 
         yield NewLineSet(id="newlineset")
+        yield Label("", id="conbtn-spacer")
         yield Button("connect", id="conbtn")
 
 

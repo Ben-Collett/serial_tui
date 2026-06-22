@@ -4,6 +4,7 @@ Screen {
 
 #newlineset {
   align: right middle;
+  width: 10
 }
 
 #topbar {
@@ -44,11 +45,18 @@ Screen {
   background: #1243AF;
 }
 
+#conbtn-spacer {
+  width: 1fr;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
 #conbtn {
   border: solid #41B53F;
   margin: 0;
   padding: 0;
-  width: 20%;
   color: #41B53F;
   background: $boost;
 }

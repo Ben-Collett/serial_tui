@@ -1,11 +1,11 @@
 import serial
 from serial import Serial
-from device import Device
+from .device import Device
 from threading import Thread, Event
 from queue import Queue, Empty
 from typing import Optional
 from dataclasses import dataclass, field
-from events import SerialEvent, Connect, DataEvent, Disconnect, BufferUpdate
+from .events import SerialEvent, Connect, DataEvent, Disconnect, BufferUpdate
 import time
 
 

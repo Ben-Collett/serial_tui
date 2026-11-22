@@ -1,10 +1,10 @@
 from textual.theme import Theme
-from config_manager import ConfigManager
-from load_config_map import parse
+from .config_manager import ConfigManager
+from .load_config_map import parse
 from pathlib import Path
 import json
-from constants import PROGRAM_NAME, CONFIG_FILE_NAME, DEVICES_DIR_NAME, DEVICES_EXTENSION, THEME_DIR_NAME
-from theme_parse import create_theme
+from .constants import PROGRAM_NAME, CONFIG_FILE_NAME, DEVICES_DIR_NAME, DEVICES_EXTENSION, THEME_DIR_NAME
+from .theme_parse import create_theme
 
 _NAME_KEY = "n"
 _DESCRIPTION_KEY = "d"

@@ -1,10 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "serial-tui"
 version = "0.1.0"
-description = "Add your description here"
+description = "A modern serial terminal TUI for talking to serial devices"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "pyserial>=3.5",
   "textual>=8.2.7",
+]
+
+[project.scripts]
+serial-tui = "serial_tui.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+serial_tui = [
+  "main_screen.scss",
+  "config/*.toml",
+  "config/themes/*.toml",
+  "config/devices/*.jsonl",
 ]

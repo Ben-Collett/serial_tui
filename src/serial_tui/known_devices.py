@@ -1,4 +1,4 @@
-from device import RecommendedDeviceSettings
+from .device import RecommendedDeviceSettings
 
 
 def charachorder():

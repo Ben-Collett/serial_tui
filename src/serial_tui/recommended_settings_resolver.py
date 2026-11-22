@@ -1,7 +1,7 @@
 import re
-from device import RecommendedDeviceSettings, Device
-from config_utils import load_device_compleitions
-from known_devices import charachorder
+from .device import RecommendedDeviceSettings, Device
+from .config_utils import load_device_compleitions
+from .known_devices import charachorder
 
 
 def _default_recommendation(device: Device):

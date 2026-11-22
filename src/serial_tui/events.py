@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional 
-from device import Device
+from .device import Device
 @dataclass
 class SerialEvent:
     device: Optional[Device]

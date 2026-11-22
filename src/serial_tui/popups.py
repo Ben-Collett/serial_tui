@@ -6,11 +6,11 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.containers import Container, HorizontalGroup
 from textual.widgets import Button, Input, Label, ListView, ListItem
-from device import Device, RecommendedDeviceSettings
-from my_manager import manager
-from recommended_settings_resolver import RecommendedSettingsResolver
-from debug_utils import logger
-from math_utils import try_parse_int, clamp_int
+from .device import Device, RecommendedDeviceSettings
+from .my_manager import manager
+from .recommended_settings_resolver import RecommendedSettingsResolver
+from .debug_utils import logger
+from .math_utils import try_parse_int, clamp_int
 
 
 @dataclass

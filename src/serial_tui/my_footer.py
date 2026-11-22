@@ -6,7 +6,7 @@ from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Input, ListView, ListItem, Placeholder,  Static
-from debug_utils import logger
+from .debug_utils import logger
 
 ELLIPS = "..."
 

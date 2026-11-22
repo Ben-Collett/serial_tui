@@ -5,24 +5,24 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import HorizontalGroup, VerticalGroup
 from textual.widgets import Button, Header, Input, Label, Switch
-from custom_log import AutoScrollMode, CustomLog
-from completed_input import CompletedInput
-from device import Device
-from my_footer import CustomFooter
-from strings import not_reigistered_theme, unknown_command
-from popups import SelectDeviceData, SelectDeviceScreen
-from my_manager import manager
-from events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
-from config import (get_auto_scroll_duration, get_auto_complete_enabled,
+from .custom_log import AutoScrollMode, CustomLog
+from .completed_input import CompletedInput
+from .device import Device
+from .my_footer import CustomFooter
+from .strings import not_reigistered_theme, unknown_command
+from .popups import SelectDeviceData, SelectDeviceScreen
+from .my_manager import manager
+from .events import DataEvent, Connect, Disconnect, ErrorEvent, SerialEvent, BufferUpdate
+from .config import (get_auto_scroll_duration, get_auto_complete_enabled,
                     get_auto_scroll_mode, get_command_descriptions_override,
                     get_commands_override, get_devices_config,
                     get_header_visible, get_footer_max_height, get_history_size,
                     get_keybindings, get_shorten_binding,
                     get_suggestion_overlay_max_height,
                     get_suggestion_overlay_max_width, get_theme)
-from config_utils import load_config, get_themes_dir, theme_from_file
-from constants import DEFAULT_THEME
-from recommended_settings_resolver import RecommendedSettingsResolver
+from .config_utils import load_config, get_themes_dir, theme_from_file
+from .constants import DEFAULT_THEME
+from .recommended_settings_resolver import RecommendedSettingsResolver
 
 
 @dataclass
@@ -736,6 +736,10 @@ def _make_user_command_completions(user_commands: dict, description_override: di
     return completion_suggestions
 
 
-if __name__ == "__main__":
+def main():
     app = SerialTui()
     app.run()
+
+
+if __name__ == "__main__":
+    main()

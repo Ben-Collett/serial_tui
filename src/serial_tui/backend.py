@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from typing import Optional
-from device import Device
+from .device import Device
 from queue import Empty
-from connection import Connection, ConnectionManager
+from .connection import Connection, ConnectionManager
 from threading import Thread
 import time
-from events import SerialEvent, DataEvent, Connect, Disconnect
+from .events import SerialEvent, DataEvent, Connect, Disconnect
 
 
 @dataclass

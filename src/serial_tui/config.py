@@ -1,6 +1,6 @@
 from typing import Type
 
-from constants import DEFAULT_THEME
+from .constants import DEFAULT_THEME
 
 
 def safe_get(config: dict,  typ: Type, default, *keys):
